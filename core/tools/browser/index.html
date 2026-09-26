@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>工单台</title>
+  <link rel="stylesheet" href="tickets.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>工单台</h1>
+      <p id="sourceStatus">正在读取工单盘…</p>
+    </div>
+    <div id="stateBoard" class="top-actions state-board" title="当前值面：读它，不要抄进自己的接管件"></div>
+    <div class="top-actions">
+      <button id="forceReload" class="button ghost" type="button" title="丢掉本地缓存、整份重新取一次。平时不用点——增量刷新已经会自动核对;这是万一的退路">强制重取</button>
+      <a id="accountLink" class="button ghost" href="/account" hidden>我的令牌</a>
+    </div>
+  </header>
+  <nav id="mainNav" class="main-nav">
+    <button data-view="slots" class="active">总监位</button>
+    <button data-view="designer">设计者队列</button>
+    <button data-view="digest">日览</button>
+    <button data-view="search">搜索</button>
+    <button data-view="new">新单</button>
+  </nav>
+  <div id="notice" class="notice" hidden></div>
+  <main id="app" aria-live="polite"></main>
+  <dialog id="modal"><button class="modal-close" aria-label="关闭">×</button><div class="modal-body"></div></dialog>
+  <!-- tickets-bundle.js 是**离线**(file://)那条路的整份数据,由 ticket build 生成、
+       .gitignore 明令不入仓;而上服打包用 git archive ⇒ 它永远进不了线上包,
+       线上每次开页都白撞一个 404。API_MODE(tickets.js)只在 http/https 下为真,
+       也就是说这份数据**只有 file:// 才用得上**。⇒ 按协议挂,联机一次都不请求。
+       用 document.write 是因为它必须在 tickets.js 之前同步执行完(tickets.js 末尾就 refresh()),
+       动态插入的 script 挡不住已经排在解析队列里的 tickets.js。 -->
+  <script>if(location.protocol==='file:')document.write('<script src="data/tickets-bundle.js"><\/script>');</script>
+  <!-- desk-config.js 由服务端按配置文件现生成(位名、特殊位、任务档、模型名册),必须在 tickets.js 之前同步载入;
+       file:// 下没有它,tickets.js 改从离线整包里取同一份。 -->
+  <script>if(location.protocol!=='file:')document.write('<script src="desk-config.js"><\/script>');</script>
+  <script src="tickets.js"></script>
+  <script>if(location.protocol==='https:')document.querySelector('#accountLink').hidden=false;</script>
+</body>
+</html>

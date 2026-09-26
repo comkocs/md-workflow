@@ -1,0 +1,43 @@
+md-workflow
+Copyright 2026 comkocs
+
+原始出处：https://github.com/comkocs/md-workflow
+作者：comkocs ｜ Email:970457@qq.com
+前身：md-first（本仓是它的后继；旧仓已改名为本仓，旧链接自动跳转）
+
+本作品包含：
+
+  · 宪法、角色模板、任务书 / 收口报告 / 审计件模板、记忆种子与规范（desk/）
+  · Ticket Desk 工单台：命令行、本机网页台面、上服扩展（core/）
+  · 从空目录走完一张 0 号单的演示（examples/）
+
+────────────────────────────────────────────────────────────────────────
+
+md-workflow 是人在环上的多 agent 工作流：记忆与接管是内核、工单台是通道、
+闸口是可裁剪配置。它来自一个真实项目：一个人不写代码、只拍板，
+指挥多扇 AI 窗口干活；宪法里每一道闸、种子里每一条规矩，后面都有一次具体的事故。
+本仓的文档与代码由 AI 窗口写成，人负责出想法、拍板、验收。
+
+按 Apache License 2.0 第 4 条：
+
+  你可以自由使用、修改、再分发本作品，包括商业用途，不需要事先取得许可。
+
+  但**再分发或发布衍生作品时，本文件中的上述归属声明必须一并保留**，
+  并且改动过的文件要显著标注「已被修改」。
+
+  换句话说：拿去用、拿去改、拿去卖，都可以；
+  **只有一件事不可以——把它说成是你自己原创的。**
+
+────────────────────────────────────────────────────────────────────────
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

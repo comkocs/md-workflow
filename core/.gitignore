@@ -1,0 +1,11 @@
+# 随工单台代码一起搬来的忽略规则。
+# 离线整包数据(tools/browser/data/tickets-bundle.js)由 tests 的 KeepAliveAndCachingTests.test_11 钉住:它必须被 git 忽略。
+*.sqlite
+*.sqlite-*
+tools/browser/data/tickets-bundle.js
+# 本机默认数据根(TICKET_DESK_ROOT 不设时落这里):真数据每分钟都在变,不进仓。
+data/
+# start.py --demo 的演示数据目录(与正式数据分开),首次起台时现播,不进仓。
+demo-data/
+# pack.sh 打包时写进包里的部署头,只存在于上服包里。
+extensions/server_deploy/DEPLOY_HEAD
