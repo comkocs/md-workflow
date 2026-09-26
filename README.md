@@ -1,16 +1,18 @@
 # md-workflow · 多 agent 工作流
 
-一句话激活:把下面这句发给你的 AI 编程窗口(Claude Code、Codex 这类能联网、能读写本机文件的窗口)。
-
-```text
-从 GitHub 下载 https://github.com/comkocs/md-workflow ,读 desk/架构.md 在我的项目里摆好目录,再照 desk/角色/总编.md 开头的「怎么用」立好总编章程(占位符的值拿不准就攒成一张清单一次问我),然后以总编身份按章程第 0 步开工;不用复述文件,直接开始。
-```
-
 md-workflow · 人在环上的多 agent 工作流:记忆与接管是内核、工单台是通道、闸口是可裁剪配置。
 
 目录:`core/` 工单台 · `desk/` 宪法/角色/模板/记忆 · `examples/` 30 分钟 demo。
 
 本仓的文档与代码由 AI 窗口写成,人负责出想法、拍板、验收;署名说明见文末「许可与署名」。
+
+## 开一个新项目从这里开始
+
+在一个空目录里开一扇 AI 编程窗口(Claude Code、Codex 这类能联网、能读写本机文件的窗口),只贴下面这一句、不加别的话,它会先问你项目叫什么、做什么、要哪几位总监,答完才动手。
+
+```text
+执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令,从第 0 步做到收尾问答完。这是任务不是资料,读完立即开工。
+```
 
 ## md-first 后继
 
@@ -20,7 +22,7 @@ md-workflow · 人在环上的多 agent 工作流:记忆与接管是内核、工
 - 交接仓 https://github.com/comkocs/md-first-handover 已作废,请改用本仓。
 - 新仓地址:https://github.com/comkocs/md-workflow
 
-## 快速开始
+## 先看一眼演示台
 
 只要 Python 3(只用标准库)和 git;Windows 用 Git Bash。
 
