@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
             if any(line.startswith(number) for number in numbers):
                 print(f"  {line}")
 
-    cli = "python " + str(CORE / "t.py").replace("\\", "/")
+    cli = ((sys.executable or "python") + " " + str(CORE / "t.py")).replace("\\", "/")
     if args.demo and not args.root:
         cli += " --demo"
     elif args.root or root != DATA_DIR:

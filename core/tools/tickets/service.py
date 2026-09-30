@@ -2851,6 +2851,13 @@ class TicketService:
         "指派给你本人的单可以留言,不必停下来等人问。"
     )
 
+    # say 引到已收口的单时挂在回执尾巴上的提示(闸 34):留言照写不拦,
+    # 只是提醒别再跨窗唤醒对应窗口。措辞固定,有钉测守着。
+    SAY_TERMINAL_HINT = (
+        "★这张单已收口(状态:{state}):留言已写进对话线,"
+        "别再跨窗唤醒对应窗口(宪法闸 34);查执行态用 `$T running`(在跑窗口列表)。"
+    )
+
     def say(self, slot: str, actor: str, text: str, image_path: str = "", reference: str = "") -> dict[str, Any]:
         if slot not in SLOTS:
             raise TicketError(f"总监位不在名册里：{slot}")
@@ -2862,8 +2869,7 @@ class TicketService:
         allowed = actor in {"设计者", CONDUCTOR_SLOT, slot} or actor in SLOTS or by_staff
         if not allowed:
             raise TicketError(self.SAY_REFUSED)
-        if reference:
-            self.store.load_ticket(reference)
+        referenced = self.store.load_ticket(reference) if reference else None
         images: list[dict[str, str]] = []
         if image_path:
             images.append(self._compress_thread_image(slot, Path(image_path), actor))
@@ -2871,6 +2877,10 @@ class TicketService:
         row = {"时间": now_text(), "发言人": actor, "文字": text, "图片列表": images, "引用工单号": reference.upper(), "已读标记": [actor]}
         with self.store.locked():
             self.store.append_jsonl(self.store.thread_path(slot), row)
+        if referenced is not None and is_done_for_staff(referenced):
+            # 留言**照常写入不拦**:提示只挂在回执的这一个键上,对话线里写的就是原话。
+            # 终态尺用 is_done_for_staff(阻塞不算终态——解开后原员工还得回来接着说)。
+            row["终态提示"] = self.SAY_TERMINAL_HINT.format(state=str(referenced.get("状态", "")))
         return row
 
     def upload_thread_bytes(self, slot: str, data: bytes, original_name: str, uploader: str) -> dict[str, str]:
@@ -2893,11 +2903,13 @@ class TicketService:
         allowed = actor in {"设计者", CONDUCTOR_SLOT, slot} or actor in SLOTS or by_staff
         if not allowed:
             raise TicketError(self.SAY_REFUSED)
-        if reference:
-            self.store.load_ticket(reference)
+        referenced = self.store.load_ticket(reference) if reference else None
         text = f"【员工留言】{text.strip()}" if by_staff else text.strip()
         row = {"时间": now_text(), "发言人": actor, "文字": text, "图片列表": images, "引用工单号": reference.upper(), "已读标记": [actor]}
         self.store.append_jsonl(self.store.thread_path(slot), row)
+        if referenced is not None and is_done_for_staff(referenced):
+            # 与 say 同源(同一常量、同句式):远程带图留言照常写入不拦,提示只挂在回执这一个键上。
+            row["终态提示"] = self.SAY_TERMINAL_HINT.format(state=str(referenced.get("状态", "")))
         return row
 
     def inbox(self, slot: str, actor: str, mark_read: bool = False) -> list[dict[str, Any]]:
@@ -3033,6 +3045,54 @@ class TicketService:
         if shot_pending:
             rows = [row for row in rows if row.get("实机图标记", "") == "待独图"]
         return rows
+
+    def running_windows(self, slot: str = "") -> list[dict[str, Any]]:
+        """在跑窗口列表的**唯一生成处**：CLI 的 `running` 与网页 /api/running-windows 都只消费它。
+
+        纯视图，不新增存储：「在跑」= 单还停在「已认领」（闸 34 跨窗唤醒的对象筛选就用这份名单）
+        且「指派给」是名册在册员工——转交后指派给变位名/设计者的单摘除,目标位员工认领后回列;
+        开工多久按「状态进入时间」算——store 落盘时状态一变就刷新那一格，
+        新建→已认领那一刻的时间在语义上就是开工时刻。
+        「平台」取员工名册里该员工条目的「工具/窗类型」（open_window 会把实际模型写回那一格），
+        名册查无此人的给空列，不猜。
+        """
+        staff = self.store.load_staff()
+        tools = {
+            str(member.get("员工名", "")).strip(): str(member.get("工具/窗类型", "") or "")
+            for group in (staff.get("总监位") or {}).values()
+            for member in (group.get("员工") or [])
+        }
+        rows = []
+        for ticket in self._filtered_tickets(slot, "已认领"):
+            worker = str(ticket.get("指派给", "")).strip()
+            # 转交会把「指派给」写成位名(或「设计者」):活已不在原窗口施工,这里摘除;
+            # 目标位员工 claim 后指派给回到名册员工名,单子自然回列——列表里永远只有正在施工的单。
+            if worker not in tools:
+                continue
+            entered = self._parse_time(str(ticket.get("状态进入时间") or ticket.get("最后更新时间") or ""))
+            minutes = max(0, int((datetime.now().astimezone() - entered).total_seconds() // 60))
+            rows.append({
+                "编号": ticket["编号"],
+                "所属总监位": ticket["所属总监位"],
+                "员工": worker,
+                "开工多久": self._running_duration_text(minutes),
+                "平台": tools.get(worker, ""),
+                "标题": str(ticket.get("标题", "")),
+            })
+        return rows
+
+    @staticmethod
+    def _running_duration_text(minutes: int) -> str:
+        """X天X小时X分：不足一天不写天，不足一小时不写小时，刚认领写「0分」。"""
+        days, rest = divmod(int(minutes), 1440)
+        hours, minute = divmod(rest, 60)
+        parts = []
+        if days:
+            parts.append(f"{days}天")
+        if hours:
+            parts.append(f"{hours}小时")
+        parts.append(f"{minute}分")
+        return "".join(parts)
 
     def list_tickets(
         self, slot: str = "", state: str = "", ticket_type: str = "", shot_pending: bool = False,

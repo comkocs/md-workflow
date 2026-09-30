@@ -375,6 +375,9 @@ class TicketRequestHandler(SimpleHTTPRequestHandler):
                 self._ok(self.server.service.list_staff(
                     self._one(query, "slot") or None, self._one(query, "all") == "1",
                 ))
+            elif parsed.path == "/api/running-windows":
+                # 在跑窗口列表:与命令行 running 同一个来源(service.running_windows),不另算第二遍。
+                self._ok(self.server.service.running_windows(self._one(query, "slot")))
             elif parsed.path == "/api/me" and self.server.auth:
                 self._ok(self.server.auth.account(self.current_user))
             elif parsed.path.startswith("/api/image/"):

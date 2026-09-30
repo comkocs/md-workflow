@@ -2809,6 +2809,38 @@ class RemoteClientTests(TicketTestCase):
         both(["transfer", ticket_id, "--to", OTHER_SLOT, "--reason", "交给后端复检", "--by", "UI总监"])
         both(["digest"])
 
+    def test_remote_say_with_image_on_terminal_ticket_prints_same_hint(self):
+        service = self.remote_service
+
+        def dispatched(title: str) -> dict[str, object]:
+            return service.create_dispatch(
+                SLOT, title, ["DECISIONS.md:remote-say"], "主界面/面板根", self.worker,
+                task_tier="乙", deliverables=[str(self.deliverable)], internal=False,
+            )
+
+        terminal = dispatched("远程带图终态单")
+        service.void(terminal["编号"], "建错了", SLOT)
+        running = dispatched("远程带图在跑单")
+        service.claim(running["编号"], self.worker)
+        image = self.picture("tiny.png", (120, 80))
+        # 带图的 say 走客户端 _say(POST /api/say → say_uploaded):终态单照常写入,
+        # 提示拼进返回文本第二行,且 --json 的 result 里不残留该键(与本地 pop 行为一致)。
+        result, text = self.client.execute([
+            "say", "--slot", SLOT, "--by", "设计者", "--ref", terminal["编号"],
+            "--img", str(image), "远程带图到终态单",
+        ])
+        self.assertIn(TicketService.SAY_TERMINAL_HINT.format(state="作废"), text)
+        self.assertNotIn("终态提示", result)
+        # 对照:同一命令引到在跑单,输出与修复前逐字相同——单行、以「已写入」开头、无★。
+        result, text = self.client.execute([
+            "say", "--slot", SLOT, "--by", "设计者", "--ref", running["编号"],
+            "--img", str(image), "远程带图到在跑单",
+        ])
+        self.assertTrue(text.startswith(f"已写入 {SLOT} 对话线 · "))
+        self.assertEqual(1, len(text.splitlines()))
+        self.assertNotIn("★", text)
+        self.assertNotIn("终态提示", result)
+
     def test_unavailable_remote_reads_snapshot_but_never_writes_local(self):
         environment = clean_environment(
             self.service.store.root, TICKET_REMOTE="http://127.0.0.1:1", TICKET_TOKEN_FILE=str(self.token_file),
@@ -5415,6 +5447,102 @@ class StaffSayOnOwnTicketTests(TicketTestCase):
         ticket = self._own_ticket()
         with self.assertRaises(TicketError):
             self.service.say(OTHER_SLOT, self.worker, "别位的线仍然进不去", reference=ticket["编号"])
+
+
+class RunningWindowsTests(TicketTestCase):
+    """`running` 在跑窗口列表 + `say` 到终态单的提示(T-000026)。
+
+    在跑是纯视图:状态停在「已认领」就算在跑,开工多久按「状态进入时间」,
+    平台取名册「工具/窗类型」——所以用例钉的是「claim 之后出现、离开已认领之后消失」
+    这条线,以及 say 的提示只挂在回执、对话线里写的就是原话。
+    """
+
+    def test_running_lists_claimed_ticket_with_roster_platform(self):
+        ticket = self.dispatch()
+        self.assertEqual([], self.service.running_windows(), "没认领过的单不算在跑")
+        claimed = self.service.claim(ticket["编号"], self.worker)
+        self.assertEqual("已认领", claimed["状态"])
+        rows = self.service.running_windows()
+        self.assertEqual([ticket["编号"]], [row["编号"] for row in rows])
+        row = rows[0]
+        self.assertEqual(SLOT, row["所属总监位"])
+        self.assertEqual(self.worker, row["员工"])
+        self.assertEqual("0分", row["开工多久"], "刚认领按「状态进入时间」算就是 0 分")
+        self.assertEqual("sol", row["平台"], "平台取名册「工具/窗类型」那一格")
+        # 设计者登记实际模型会写回名册同一格,列表跟着变——同一份名册,不另算。
+        self.service.open_window(ticket["编号"], "设计者", "glm-5.3")
+        self.assertEqual("glm-5.3", self.service.running_windows()[0]["平台"])
+        # --slot 筛选照 list 的口径:别的位看不到这张单。
+        self.assertEqual([], self.service.running_windows(OTHER_SLOT))
+
+    def test_running_摘除_after_submit_and_void(self):
+        first, second = self.dispatch("交板后摘除"), self.dispatch("作废后摘除")
+        self.service.claim(first["编号"], self.worker)
+        self.service.claim(second["编号"], self.worker)
+        self.assertEqual(2, len(self.service.running_windows()))
+        self.service.attach(first["编号"], str(self.picture()), "world", self.worker)
+        self.service.submit(first["编号"], "登录后界面已出现")
+        self.assertEqual(
+            [second["编号"]],
+            [row["编号"] for row in self.service.running_windows()],
+            "交板落「待判」,离开「已认领」即摘除",
+        )
+        self.service.void(second["编号"], "建错了", SLOT)
+        self.assertEqual([], self.service.running_windows(), "作废是终态,同样摘除")
+
+    def test_running_摘除_after_transfer_and_back_after_reclaim(self):
+        # 序列①(审计复现路径):派单在「已认领」被转交——transfer 不改派单状态,
+        # 只把「指派给」写成位名;名册里没有叫这位的员工,单子不得再占原窗口的在跑行。
+        claimed = self.dispatch("已认领态被转走")
+        self.service.claim(claimed["编号"], self.worker)
+        self.assertIn(claimed["编号"], [row["编号"] for row in self.service.running_windows()])
+        moved = self.service.transfer(claimed["编号"], OTHER_SLOT, "转给后端接手", SLOT)
+        self.assertEqual("已认领", moved["状态"], "transfer 不改派单状态——摘除只能靠名册口径")
+        self.assertEqual(OTHER_SLOT, moved["指派给"], "转交后指派给是位名,不是在册员工")
+        self.assertNotIn(
+            claimed["编号"],
+            [row["编号"] for row in self.service.running_windows()],
+            "指派给不在名册的单摘除,即使状态还停在「已认领」",
+        )
+        # 序列②(回列):新建态转交 → 目标位员工认领,指派给回到名册员工名,单子回列。
+        fresh = self.dispatch("新建态转交后由目标位认领")
+        self.service.transfer(fresh["编号"], OTHER_SLOT, "归后端做", SLOT)
+        self.assertEqual([], self.service.running_windows(), "转交后目标位未认领,谁都不在跑")
+        worker2 = self.service.staff_new(OTHER_SLOT, "opus")["员工名"]
+        self.service.claim(fresh["编号"], worker2)
+        rows = [row for row in self.service.running_windows() if row["编号"] == fresh["编号"]]
+        self.assertEqual(1, len(rows), "目标位员工认领后重新入列")
+        self.assertEqual(worker2, rows[0]["员工"], "员工列即认领的新员工")
+        self.assertEqual("opus", rows[0]["平台"], "平台取新员工名册「工具/窗类型」那一格")
+
+    def test_say_提示_on_terminal_ticket_and_running_output_unchanged(self):
+        ticket = self.dispatch()
+        self.service.claim(ticket["编号"], self.worker)
+        # 在跑(非终态)的 say:回执不带提示键,CLI 输出与改动前逐字相同。
+        running_row = self.service.say(SLOT, "设计者", "在跑单上留言", reference=ticket["编号"])
+        self.assertNotIn("终态提示", running_row)
+        result = run_local_cli(
+            ["say", "--slot", SLOT, "--by", "设计者", "--ref", ticket["编号"], "在跑单上留言"],
+            self.service.store.root,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        written = self.service.store.read_jsonl(self.service.store.thread_path(SLOT))[-1]
+        self.assertEqual(f"已写入 {SLOT} 对话线 · {written['时间']}", result.stdout.strip())
+        # 终态单(作废):留言照常写入,回执与 CLI 输出都带同一句固定提示。
+        self.service.void(ticket["编号"], "建错了", SLOT)
+        expected = TicketService.SAY_TERMINAL_HINT.format(state="作废")
+        row = self.service.say(SLOT, "设计者", "收口后补一句", reference=ticket["编号"])
+        self.assertEqual(expected, row["终态提示"])
+        stored = self.service.store.read_jsonl(self.service.store.thread_path(SLOT))[-1]
+        self.assertEqual("收口后补一句", stored["文字"], "提示只挂在回执,对话线里写的就是原话")
+        self.assertNotIn("终态提示", stored)
+        terminal = run_local_cli(
+            ["say", "--slot", SLOT, "--by", "设计者", "--ref", ticket["编号"], "收口后再补一句"],
+            self.service.store.root,
+        )
+        self.assertEqual(0, terminal.returncode, terminal.stderr)
+        self.assertIn(f"已写入 {SLOT} 对话线 · ", terminal.stdout)
+        self.assertIn(expected, terminal.stdout)
 
 
 class BrowserWakeListTests(unittest.TestCase):

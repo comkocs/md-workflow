@@ -447,6 +447,12 @@ def parser() -> argparse.ArgumentParser:
     listing.add_argument("--pending-mine", action="store_true", help="等价 --slot <本位> --state 待答：这一位还欠着没答的单")
     listing.add_argument("--nonbiz", action="store_true", help="非业务阻塞看板：身上还挂着没清的非业务阻塞记录的单")
 
+    running = commands.add_parser(
+        "running",
+        help="在跑窗口列表:仍是「已认领」的单 · 位 · 员工 · 开工多久 · 平台(跨窗唤醒前先查它,宪法闸 34)",
+    )
+    running.add_argument("--slot", default="", help="只看这一位;不填看全部")
+
     receipt = commands.add_parser("receipt")
     receipt.add_argument("ticket")
 
@@ -726,7 +732,12 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
         return ticket, compact_ticket(ticket)
     if command == "say":
         row = service.say(args.slot, args.by, args.text, args.img, args.ref)
-        return row, f"已写入 {args.slot} 对话线 · {row['时间']}"
+        text = f"已写入 {args.slot} 对话线 · {row['时间']}"
+        # 引到已收口的单:留言照常写入,只在尾巴上多一句提示;在跑单的输出一字不加。
+        hint = row.pop("终态提示", "")
+        if hint:
+            text = f"{text}\n{hint}"
+        return row, text
     if command == "inbox":
         rows = service.inbox(args.slot, args.actor, args.mark_read)
         text = "\n".join(f"{row['时间']} · {row['发言人']}：{row['文字']}" + (f"（引用 {row['引用工单号']}）" if row.get("引用工单号") else "") for row in rows)
@@ -812,6 +823,11 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
             return rows, "\n".join(lines) or "没有待清的非业务阻塞。"
         rows = service.list_tickets(args.slot, args.state, args.ticket_type, args.shot_pending)
         return rows, "\n".join(compact_ticket(row) for row in rows) or "没有符合条件的工单。"
+    if command == "running":
+        # 在跑窗口列表:与网页 /api/running-windows 同一个来源(service.running_windows),不另算第二遍。
+        rows = service.running_windows(args.slot)
+        lines = [f"{row['编号']} · {row['所属总监位']} · {row['员工']} · {row['开工多久']} · {row['平台']}" for row in rows]
+        return rows, "\n".join(lines) or "没有在跑的窗口(「已认领」一张都没有)。"
     if command == "receipt":
         ticket = service.store.load_ticket(args.ticket)
         receipt = service.receipt(ticket)

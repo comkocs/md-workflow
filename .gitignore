@@ -2,3 +2,4 @@ _work/
 *.db
 *.log
 __pycache__/
+.claude/skills/

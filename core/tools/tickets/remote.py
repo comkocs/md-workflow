@@ -152,7 +152,13 @@ class RemoteClient:
             "slot": slot, "by": actor, "text": text, "ref": reference,
             "images": [{"filename": name, "base64": base64.b64encode(raw).decode("ascii")}],
         })
-        return result, f"已写入 {slot} 对话线 · {result['时间']}"
+        # 与本地 ticket.py 的 say 分支同源:引到已收口的单时服务端会在回执挂「终态提示」,
+        # 这里拼成返回文本的第二行并从 result 里摘掉——在跑单的输出一字不加,--json 不残留该键。
+        hint = result.pop("终态提示", "")
+        text = f"已写入 {slot} 对话线 · {result['时间']}"
+        if hint:
+            text = f"{text}\n{hint}"
+        return result, text
 
     def request(self, method: str, path: str, value: dict[str, Any]) -> Any:
         value = dict(value)

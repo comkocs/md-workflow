@@ -124,6 +124,9 @@ async function readApi() {
      ★摘要故意不进缓存:已读标记是会被回头改的(inbox --mark-read 改的是已有行),
      缓存它就会出现「标了已读、角标还亮着」这种旧数据。服务端现算就没这问题。 */
   data.threadSummary=await api("/api/thread-summary").catch(()=>({}));
+  /* 在跑窗口列表:与命令行 running 同一个来源(/api/running-windows → service.running_windows)。
+     老服务端没有这一格时静默给空表,不报错;离线(file://)那条路没有服务端,这一段就不显示。 */
+  data.running=await api("/api/running-windows").catch(()=>[]);
   /* ★★ 必须先清空:blankData() 会给每一位预填一个**空数组**,而「有没有全文」是靠
      Array.isArray 判断的——空数组也是数组,于是除当前这一位外全被算成「0 条未读」,
      「要你去唤醒的窗口」从 10 格塌成 2 格(2026-09-08 设计者当场撞到,本位改坏的)。
@@ -230,6 +233,14 @@ function staffFor(slot) { return app.data?.staff?.总监位?.[slot]?.员工||[];
    会把「现在能派给谁」这件事淹掉。已收窗的收进一个默认折起的 details，点开仍可查履历；
    数据一份没删，模型合格率也照旧读全量（账按模型统计，不按编号）。 */
 function staffChip(m){return `<span class="staff ${m.状态==='在岗'?'on':'off'}" data-staff="${esc(m.员工名)}">${esc(m.员工名)} · ${esc(m['工具/窗类型'])} · ${esc(m.状态)}${m.固定工位?' · 固定工位':''}</span>`}
+/* 在跑窗口列表的行:字段与命令行 running 完全同表(单号/位/员工/开工多久/平台),
+   悬停看标题。名册查无该员工时服务端给空列,这里补一个占位——空串在页面上看不出是哪一格缺了。 */
+function runningChip(r){return `<span class="staff on" title="${esc(r.标题||'')}">${esc(r.编号)} · ${esc(r.所属总监位)} · ${esc(r.员工)} · 开工${esc(r.开工多久)} · ${esc(r.平台||'<名册未登记>')}</span>`}
+function runningRow(slot){
+  const rows=(app.data?.running||[]).filter(r=>r.所属总监位===slot);
+  if(!rows.length)return '';
+  return `<div class="staff-row"><b>在跑窗口</b>${rows.map(runningChip).join('')}</div>`;
+}
 function staffRoster(staff){
   const onDuty=staff.filter(m=>m.状态==='在岗'),retired=staff.filter(m=>m.状态!=='在岗');
   if(!staff.length)return '尚未登记员工';
@@ -261,7 +272,7 @@ function renderSlots() {
   const doingBlock=doingRows.length?`<details class="done-group pref-group" data-pref="deskDoingOpen"${lsGet(`deskDoingOpen:${app.slot}`)==="1"?" open":""}><summary>进行中 · ${doingRows.map(([state,count])=>`${esc(state)} ${count}`).join(" · ")}</summary><div class="state-grid">${doingRows.map(([state])=>stateColumn(state)).join("")}</div></details>`:"";
   const doneBlock=doneRows.length?`<details class="done-group pref-group" data-pref="deskDoneOpen"${lsGet(`deskDoneOpen:${app.slot}`)==="1"?" open":""}><summary>已办 · ${doneRows.map(([state,count])=>`${esc(state)} ${count}`).join(" · ")}</summary><div class="state-grid">${doneRows.map(([state])=>stateColumn(state)).join("")}</div></details>`:"";
   $("#app").innerHTML=`<div class="slot-tabs">${slots.map(s=>`<button data-slot="${esc(s)}" class="${s===app.slot?'active':''}" title="${esc(designerTodoTitle(s))}">${esc(s)}${designerTodo(s)?` · ${designerTodo(s)}`:''}</button>`).join("")}</div>
-  <div class="slot-layout"><section class="panel"><h2>${esc(app.slot)}工单</h2>${charterRow(app.slot)}<div class="staff-row"><b>员工名册</b>${staffRoster(staff)}</div>
+  <div class="slot-layout"><section class="panel"><h2>${esc(app.slot)}工单</h2>${charterRow(app.slot)}<div class="staff-row"><b>员工名册</b>${staffRoster(staff)}</div>${runningRow(app.slot)}
   ${writable()&&!NO_DISPATCH_SLOTS.has(app.slot)?`<details class="dispatch-create"><summary>总监建派单</summary><form class="form" data-dispatch-slot="${esc(app.slot)}"><label>任务档（总监定）<select name="tier" required>${TASK_TIERS.map(tier=>`<option${tier===TIER_MID?' selected':''}>${esc(tier)}</option>`).join('')}</select></label><label>上下文预算（仅${esc(TIER_LOW)}档必填，最多 2000 行）<input name="context" type="number" min="0" max="2000"></label><label>标题<input name="title" required placeholder="一句话写清交付物；要指定开窗工具就以【claude】【codex】【vscode】【zcode】之一开头"></label><label>真源指针<input name="source" required placeholder="依据哪份需求：需求单号、文件路径或决定标题"></label><label>实机消费者<input name="consumer" required placeholder="这件产出被谁用：哪个页面/服务/流程读取它"></label><label>交付项（逐行列出必须产出的文件）<textarea name="deliverables" required placeholder="D:\\output\\result.json&#10;T-000123-01.jpg"></textarea></label><label class="check-row"><input name="internal" type="checkbox"> 非玩家可感知（内部工具；用验证命令和原样输出交板）</label><label>指派员工<select name="assign"><option value="">暂不指派</option>${staff.filter(m=>m.状态==='在岗').map(m=>`<option>${esc(m.员工名)}</option>`).join('')}</select></label><label>备注<textarea name="notes" placeholder="执行边界或验收说明"></textarea></label><button>建立派单</button></form></details>`:''}
   ${(actGrid+doingBlock+doneBlock)||'<div class="empty">这个总监位还没有工单。</div>'}</section>${chatPanel(app.slot)}</div>`;
 }

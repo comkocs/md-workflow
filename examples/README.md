@@ -4,7 +4,9 @@
 
 真项目里第 4~8 步各由一个 AI 窗来做;demo 里第 7 步要你真开一个 AI 窗,其余各步由你替那个窗跑它会跑的那一条命令。
 
-要准备:Windows + Git Bash、Python 3(带 pytest)、git;第 7 步要一个能读写本机文件的 AI 编程窗(如 Claude Code)。全程在同一个 Git Bash 窗里,从上往下一步贴一条。
+要准备:Windows 用 Git Bash、Linux/mac 用自带终端,Python 3(带 pytest)、git;本机 Python 3 叫 `python3` 的,把命令里的 `python` 换成 `python3`。第 7 步要一个能读写本机文件的 AI 编程窗(如 Claude Code)。全程在同一个终端窗里,从上往下一步贴一条。
+
+平台说明:Windows + Git Bash 验证过;Linux 写法已兼容、未实跑;Mac 未验证。
 
 本目录的文件:
 
@@ -75,7 +77,7 @@ cp "$DEMO/code/examples/需求-001_hello.md" "$DEMO/_office/后端/需求件/" &
 后端总监落任务书、建员工位,建单时一次带齐 `--taskbook` 与 `--assign` 拿到开窗指令,再单独一条把单置成「免判卷模块」。
 
 ```bash
-W=$(cd "$DEMO" && pwd -W) && sed "s#@DEMO@#$W#g" "$DEMO/code/examples/需求-001_hello_0号包干.md" > "$DEMO/_office/后端/任务书/需求-001_hello_0号包干.md" && git -C "$DEMO/_office" add -- 后端/任务书/需求-001_hello_0号包干.md && git -C "$DEMO/_office" -c user.name=后端 -c user.email=demo@mdwf.local commit -q -m "后端: 需求-001 任务书" && $T staff new --slot 后端 --tool opus && $T new --slot 后端 --by 后端 --tier 甲 --internal --window claude --title "加 core/hello_mdwf.py 打印位表" --taskbook "$W/_office/后端/任务书/需求-001_hello_0号包干.md" --deliverable core/hello_mdwf.py --consumer "想一眼看位表的新人:python core/hello_mdwf.py" --source "$W/_office/后端/需求件/需求-001_hello.md" --assign 后端-01 && $T set T-000001 --exempt-judging 是 --by 后端
+W=$(cd "$DEMO" && { pwd -W 2>/dev/null || pwd; }) && sed "s#@DEMO@#$W#g" "$DEMO/code/examples/需求-001_hello_0号包干.md" > "$DEMO/_office/后端/任务书/需求-001_hello_0号包干.md" && git -C "$DEMO/_office" add -- 后端/任务书/需求-001_hello_0号包干.md && git -C "$DEMO/_office" -c user.name=后端 -c user.email=demo@mdwf.local commit -q -m "后端: 需求-001 任务书" && $T staff new --slot 后端 --tool opus && $T new --slot 后端 --by 后端 --tier 甲 --internal --window claude --title "加 core/hello_mdwf.py 打印位表" --taskbook "$W/_office/后端/任务书/需求-001_hello_0号包干.md" --deliverable core/hello_mdwf.py --consumer "想一眼看位表的新人:python core/hello_mdwf.py" --source "$W/_office/后端/需求件/需求-001_hello.md" --assign 后端-01 && $T set T-000001 --exempt-judging 是 --by 后端
 ```
 
 看到:`后端-01`;一段「以下交付项现在还不存在」的提醒(正常,第 6 步才做出来);`T-000001` 与三行开窗指令(认领一句 / 「执行 … 的全部指令」一句 / 只给你的操作提示一句);末行 `已改 免判卷模块：是`。git 若提示 LF 与 CRLF 互换,可忽略。
@@ -100,10 +102,10 @@ $T claim T-000001 --by 后端-01 && git -C "$DEMO/code" fetch -q origin && git -
 
 ## 第 7 步 · 顶级审计
 
-这一步是人工的:下面这条把 `desk/角色/顶级审计子代理提示词.md` 里的代码块取出、填好本单字段,存成一份可以直接贴的提示词。
+这一步是人工的:下面这条把 `.agents/skills/top-audit-dispatch/references/top-audit-subagent-prompt.md` 里的代码块取出、填好本单字段,存成一份可以直接贴的提示词。
 
 ```bash
-W=$(cd "$DEMO" && pwd -W) && git -C "$DEMO/code" fetch -q origin && mkdir -p "$DEMO/_work/audit-T-000001" && sed -n '/^````text$/,/^````$/p' "$DEMO/code/desk/角色/顶级审计子代理提示词.md" | sed -e '/^````/d' -e 's#<位名>#后端#g' -e 's#<单号>#T-000001#g' -e "s#<需求件绝对路径>#$W/_office/后端/需求件/需求-001_hello.md#g" -e "s#<任务书绝对路径>#$W/_office/后端/任务书/需求-001_hello_0号包干.md#g" -e "s#<提交号>#$(git -C "$DEMO/code" rev-parse origin/main)#g" -e "s#<日期>#$(date +%F)#g" -e "s#{{代码仓路径}}#$W/code#g" -e 's#{{远端主支}}#origin/main#g' -e 's#{{代码托管远端}}#origin#g' -e "s#{{章程目录}}#$W/_office#g" -e "s#{{工作树根目录}}#$W/_work#g" > "$DEMO/_work/audit-T-000001/审计提示词.txt" && ! grep -n '{{\|<位名>\|<单号>\|<提交号>\|<日期>\|<需求件\|<任务书' "$DEMO/_work/audit-T-000001/审计提示词.txt" && echo "已生成 $W/_work/audit-T-000001/审计提示词.txt"
+W=$(cd "$DEMO" && { pwd -W 2>/dev/null || pwd; }) && git -C "$DEMO/code" fetch -q origin && mkdir -p "$DEMO/_work/audit-T-000001" && sed -n '/^````text$/,/^````$/p' "$DEMO/code/.agents/skills/top-audit-dispatch/references/top-audit-subagent-prompt.md" | sed -e '/^````/d' -e 's#<位名>#后端#g' -e 's#<单号>#T-000001#g' -e "s#<需求件绝对路径>#$W/_office/后端/需求件/需求-001_hello.md#g" -e "s#<任务书绝对路径>#$W/_office/后端/任务书/需求-001_hello_0号包干.md#g" -e "s#<提交号>#$(git -C "$DEMO/code" rev-parse origin/main)#g" -e "s#<日期>#$(date +%F)#g" -e "s#{{代码仓路径}}#$W/code#g" -e 's#{{远端主支}}#origin/main#g' -e 's#{{代码托管远端}}#origin#g' -e "s#{{章程目录}}#$W/_office#g" -e "s#{{工作树根目录}}#$W/_work#g" > "$DEMO/_work/audit-T-000001/审计提示词.txt" && ! grep -n '{{\|<位名>\|<单号>\|<提交号>\|<日期>\|<需求件\|<任务书' "$DEMO/_work/audit-T-000001/审计提示词.txt" && echo "已生成 $W/_work/audit-T-000001/审计提示词.txt"
 ```
 
 看到:`已生成 …/审计提示词.txt`(字段有没填上的会先打出那几行,且不打这一句)。然后:
