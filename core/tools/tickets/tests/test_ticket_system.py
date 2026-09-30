@@ -116,7 +116,8 @@ class TicketTestCase(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         self.service = TicketService(TicketStore(self.root / "tickets"))
-        self.worker = self.service.staff_new(SLOT, "sol")["员工名"]
+        # 员工只标平台(需求-023):登记带上平台,--tool 仍是自由文本。
+        self.worker = self.service.staff_new(SLOT, "sol", "codex")["员工名"]
         self.deliverable = self.root / "deliverable.txt"
         self.deliverable.write_text("产物\n", encoding="utf-8")
 
@@ -229,7 +230,7 @@ class JudgeBlameTests(TicketTestCase):
     def test_r1_4_model_blame_adds_the_existing_model_score(self):
         ticket = self.to_judging()
         self.service.judge(ticket["编号"], False, "UI总监", "执行结果不符", REWORK_VERDICT, "模型")
-        score = self.service.store.load_staff()["模型记分"]["sol-未标"]
+        score = self.service.store.load_staff()["模型记分"]["codex-未标"]
         self.assertEqual((1, 1), (score[SLOT], score["合计"]))
 
     def test_r1_5_verdict_first_line_must_match_blame(self):
@@ -330,7 +331,7 @@ class BlameCorrectionTests(TicketTestCase):
 
     def test_r2_6_model_to_question_moves_the_field_and_both_ledgers(self):
         ticket = self.reworked()
-        self.assertEqual({SLOT: 1, "合计": 1}, self.service.store.load_staff()["模型记分"]["sol-未标"])
+        self.assertEqual({SLOT: 1, "合计": 1}, self.service.store.load_staff()["模型记分"]["codex-未标"])
         result = run_local_cli([
             "set", ticket["编号"], "--blame", "出题",
             "--reason", "复核后确认是任务书判据写错，执行方照做无误", "--by", SLOT,
@@ -342,7 +343,7 @@ class BlameCorrectionTests(TicketTestCase):
         self.assertEqual("出题", changed["返工原因列表"][-1]["判退责任"])
         self.assertEqual("出题", changed["返工原因列表"][-1]["责任"])
         staff = self.service.store.load_staff()
-        self.assertEqual({SLOT: 0, "合计": 0}, staff["模型记分"]["sol-未标"])
+        self.assertEqual({SLOT: 0, "合计": 0}, staff["模型记分"]["codex-未标"])
         self.assertEqual({"合计": 1, SLOT: 1}, staff["出题记分"][SLOT])
         event = self.service.store.read_jsonl(self.service.store.log_path)[-1]
         self.assertEqual(("set-blame", "模型", "出题"), (event["事件"], event["旧值"], event["新值"]))
@@ -365,7 +366,7 @@ class BlameCorrectionTests(TicketTestCase):
         self.assertIn(OTHER_SLOT, message)
         self.assertIn(SLOT, message)
         self.assertEqual("模型", self.service.store.load_ticket(ticket["编号"])["判退责任"])
-        self.assertEqual(1, self.service.store.load_staff()["模型记分"]["sol-未标"]["合计"])
+        self.assertEqual(1, self.service.store.load_staff()["模型记分"]["codex-未标"]["合计"])
 
     def test_r2_9_empty_reason_is_refused(self):
         ticket = self.reworked()
@@ -401,15 +402,16 @@ class ModelAccountingTests(TicketTestCase):
             ticket["编号"], False, "UI总监", "执行结果不符", REWORK_VERDICT, "模型",
         )
         scores = self.service.store.load_staff()["模型记分"]
-        self.assertEqual(1, scores["sol-未标"]["合计"])
+        self.assertEqual(1, scores["codex-未标"]["合计"])
         self.assertNotIn("sol", scores)
-        self.assertIn("这张单没填实际模型，已按 sol-未标 单独记账", notice)
+        self.assertIn("这张单没填实际模型，已按 codex-未标 单独记账", notice)
 
-    def test_r2_4_empty_roster_warns_but_does_not_block_rework(self):
+    def test_r2_4_off_roster_model_accounts_without_warning(self):
+        """需求-023:名册停用后任何模型名照常记账——老库残留的名册键(置空名册)照读不报错,不再出「不在名册里」提醒。"""
         slots = self.service.store.read_json(self.service.store.slots_path)
         slots["模型名册"] = []
         self.service.store.atomic_json(self.service.store.slots_path, slots)
-        ticket = self.dispatch("空名册照常判退")
+        ticket = self.dispatch("名册外模型照常判退")
         self.service.open_window(ticket["编号"], "设计者", "Mystery__Ultra")
         self.service.claim(ticket["编号"], self.worker)
         self.service.attach(ticket["编号"], str(self.picture("empty-roster.png")), "world", self.worker)
@@ -419,7 +421,8 @@ class ModelAccountingTests(TicketTestCase):
         )
         self.assertEqual("返工", judged["状态"])
         self.assertEqual(1, self.service.store.load_staff()["模型记分"]["mystery-ultra"]["合计"])
-        self.assertIn("模型名 mystery-ultra 不在名册里，已按字面记账", notice)
+        self.assertNotIn("不在名册里", notice)
+        self.assertNotIn("只吃", notice)
 
     def test_r2_5_digest_splits_the_same_model_by_task_tier(self):
         for index, task_tier in enumerate(("甲", "乙"), 1):
@@ -477,7 +480,7 @@ class QuestionScoreAndBanNoticeTests(TicketTestCase):
         self.assertIn(f"[出题] {SLOT} | 1", digest)
 
     def test_r3_3_threshold_minus_one_really_notifies_conductor_thread(self):
-        # 用非主力模型 glm-5.3:R1.5 之后主力模型(sol/opus/fable)到线只作质量提示,不再有「停用线」措辞。
+        # 需求-023 后主力/非主力分支合一:所有模型一条停用线,到线前照样只提醒。
         self._judge_model_rework(1, actual_model="glm-5.3")
         self._judge_model_rework(2, actual_model="glm-5.3")
         rows = self.service.store.read_jsonl(self.service.store.thread_path(service_module.CONDUCTOR_SLOT))
@@ -487,8 +490,7 @@ class QuestionScoreAndBanNoticeTests(TicketTestCase):
     def test_r3_4_reaching_threshold_notifies_conductor_but_writes_no_ban(self):
         """ 总编答「乙」:到停用线只通知,不自动停用(2026-09-05 sol 两次误停后定的)。
 
-        用非主力模型 glm-5.3 钉「原样措辞」:主力模型的到线措辞在 R1.5 改成了质量提示,
-        由 BanLineCountTests 单独钉。
+        需求-023 后主力/非主力分支合一,这条就是唯一的到线措辞用例。
         """
         for index in range(1, 4):
             self._judge_model_rework(index, actual_model="glm-5.3")
@@ -570,12 +572,15 @@ class BanLineCountTests(TicketTestCase):
         self.assertIn("再判退 1 次就到停用线", warning)
         self.assertNotIn("已到停用线", warning)
 
-    def test_r1_3_variant_models_merge_into_one_base_cell(self):
-        """opus 与 opus-high 两张同档单归并成同一个基名:数是 2。"""
+    def test_r1_3_variant_models_count_separately_after_roster_retirement(self):
+        """需求-023:名册停用后不再归并变体——opus 与 opus-high 各按字面自己计数,互不推高对方的停用线。"""
         self._rework(1, actual_model="opus")
         _, warning = self._rework(2, actual_model="opus-high")
-        self.assertIn("模型 opus(乙档)", warning, warning)
-        self.assertIn("记模型责任判退 2 次", warning, warning)
+        self.assertNotIn("已到停用线", warning)
+        _, warning = self._rework(3, actual_model="opus-high")
+        self.assertIn("模型 opus-high(乙档)", warning, warning)
+        self.assertIn("累计判退 2 次", warning, warning)
+        self.assertIn("再判退 1 次就到停用线", warning)
 
     def test_r1_4_task_tiers_never_merge(self):
         """甲档一张 + 乙档一张各算各的:乙档第二张时是 2(差一到线),不是 3(已到线)。。"""
@@ -609,22 +614,8 @@ class BanLineCountTests(TicketTestCase):
         self.assertEqual([], bans["全项目"])
         self.assertFalse(any(bans["按位"].values()))
 
-    def test_r2_1_main_model_never_says_ban_line(self):
-        """R1.5:主力模型到线只作质量提示,不再出现「已到停用线」这类吓人的措辞。"""
-        ids = []
-        for index in (1, 2, 3):
-            ticket, warning = self._rework(index, actual_model="opus")
-            ids.append(ticket["编号"])
-        self.assertIn("记模型责任判退 3 次", warning, warning)
-        self.assertIn("主力模型不停用", warning)
-        self.assertIn("质量提示", warning)
-        self.assertNotIn("已到停用线", warning)
-        self.assertNotIn("停不停", warning)
-        for ticket_id in ids:
-            self.assertIn(ticket_id, warning)
-
-    def test_r2_2_non_main_model_keeps_original_wording(self):
-        """非主力模型到线措辞保持原样:仍是「已到停用线」+「自动停用已关」,只通知不落停用名单。"""
+    def test_r2_2_model_at_line_keeps_original_wording(self):
+        """需求-023 后主力/非主力分支合一:任何模型到线都是「已到停用线」+「自动停用已关」,只通知不落停用名单。"""
         _, warning = self._rework(1, actual_model="glm-5.3")
         self.assertNotIn("停用线", warning)
         for index in (2, 3):
@@ -634,23 +625,6 @@ class BanLineCountTests(TicketTestCase):
         self.assertIn("累计判退 3 次", warning)
         self.assertNotIn("主力模型不停用", warning)
         self.assertEqual([], self.service.store.load_staff()["模型停用"]["全项目"])
-
-    def test_r3_1_main_model_ban_is_designer_only(self):
-        """R1.5 的闸:staff ban 主力模型只有设计者能落笔,总编署名拒并带出设计者原话;非主力不变。"""
-        with self.assertRaises(TicketError) as caught:
-            self.service.staff_ban("opus", "总编", reason="核过三次判退确属模型责任")
-        message = str(caught.exception)
-        self.assertIn("只有设计者", message)
-        self.assertIn("绝对不能停用", message)
-        # 变体也算主力:换个写法(opus-high)同样过不了这道闸。
-        with self.assertRaises(TicketError) as caught:
-            self.service.staff_ban("Opus High", "总编", reason="换个写法试试")
-        self.assertIn("只有设计者", str(caught.exception))
-        detail = self.service.staff_ban("opus", "设计者", reason="设计者本人拍板,长期算力不足")
-        self.assertIn("opus", detail)
-        self.assertIn("opus", self.service.store.load_staff()["模型停用"]["全项目"])
-        self.service.staff_ban("glm-5.3", "总编", reason="核过责任归属,确属模型责任")
-        self.assertIn("glm-5.3", self.service.store.load_staff()["模型停用"]["全项目"])
 
 
 class SqliteStoreTests(unittest.TestCase):
@@ -1949,46 +1923,28 @@ class TaskTierAndModelScoreTests(TicketTestCase):
         ticket = self.service.create_dispatch(SLOT, "预算合规", ["DECISIONS.md:1"], "主界面", self.worker, task_tier="丙", context_lines=2000, deliverables=[str(self.deliverable)], internal=False)
         self.assertEqual(("丙", 2000), (ticket["任务档"], ticket["上下文预算"]))
 
-    def test_slots_have_editable_model_policy(self):
+    def test_new_library_slots_carry_no_retired_roster_keys(self):
+        """需求-023:三键停用后新库不再写「主力模型集合」「模型名册」,位行也不再有「主力模型」字段。"""
         slots = self.service.store.read_json(self.service.store.slots_path)
-        self.assertEqual(["sol", "opus", "fable"], slots["主力模型集合"])
+        self.assertNotIn("主力模型集合", slots)
+        self.assertNotIn("旧版主力模型集合", slots)
+        self.assertNotIn("模型名册", slots)
         self.assertEqual({"同位": 3, "全项目": 5}, slots["停用阈值"])
-        self.assertTrue(all(row["主力模型"] for row in slots["总监位"]))
+        self.assertTrue(all("主力模型" not in row for row in slots["总监位"]))
 
     def test_r4_actual_model_is_not_required_when_dispatch_is_created(self):
         ticket = self.dispatch("建单不替设计者选模型")
         self.assertEqual("乙", ticket["任务档"])
         self.assertEqual("", ticket["实际模型"])
 
-    def test_r4_roster_has_all_sol_levels_and_retired_spark_cannot_be_new(self):
-        roster = self.service.store.read_json(self.service.store.slots_path)["模型名册"]
-        sol = next(row for row in roster if row["模型"] == "sol")
-        spark = next(row for row in roster if row["模型"] == "codex-spark")
-        self.assertEqual(["high", "middle", "low"], sol["可选档位"])
-        self.assertEqual("退役", spark["状态"])
-        self.assertEqual("", self.service.staff_new(OTHER_SLOT, "sol low")["提示"])
-
-        staff = self.service.store.load_staff()
-        historical = staff["总监位"][SLOT]["员工"][0]
-        historical["工具/窗类型"] = "codex-spark"
-        self.service.store.save_staff(staff)
-        with self.assertRaisesRegex(TicketError, "已退役"):
-            self.service.staff_new(SLOT, "codex-spark")
-        self.assertEqual("codex-spark", self.service.find_staff(self.worker)[1]["工具/窗类型"])
-
-    def test_r4_sol_low_warns_for_an_a_tier_ticket_but_does_not_block(self):
-        ticket = self.service.create_dispatch(
-            SLOT, "甲档用低档模型提醒", ["DECISIONS.md:测试"], "主界面/面板根", self.worker,
-            task_tier="甲", deliverables=[str(self.deliverable)], internal=False,
-        )
-        updated, warning = self.service.open_window(ticket["编号"], "设计者", "sol low")
-        self.assertEqual("sol low", updated["实际模型"])
-        self.assertIn("低于本单甲档", warning)
-
-    def test_non_main_model_warns_but_is_registered(self):
+    def test_off_roster_tool_registers_without_warning(self):
+        """需求-023:--tool 是自由文本,名册外字符串登记不弹「不在主力模型名册」提醒、不拦。"""
         member = self.service.staff_new(OTHER_SLOT, "codex")
-        self.assertIn("不在主力模型名册里", member["提示"])
+        self.assertEqual("", member["提示"])
         self.assertEqual("在岗", self.service.find_staff(member["员工名"])[1]["状态"])
+        platform_member = self.service.staff_new(OTHER_SLOT, "随便写", "zcode")
+        self.assertEqual("", platform_member["提示"])
+        self.assertEqual("zcode", self.service.find_staff(platform_member["员工名"])[1]["平台"])
 
     def test_pending_tool_registers_without_warning_or_model_rate_and_ban_score(self):
         member = self.service.staff_new(OTHER_SLOT, "待定")
@@ -2009,7 +1965,7 @@ class TaskTierAndModelScoreTests(TicketTestCase):
         """ 乙:到停用线只通知,不自动停用;停不停由总编落 D9。
 
         改之前这里断言第 3 次判退后 staff_new 报「已停用」——那正是 2026-09-05 两次误停 sol 的机制。
-        用非主力模型 glm-5.3:R1.5之后主力模型到线只作质量提示,不再有「已到停用线」措辞。
+        需求-023 后主力/非主力分支合一,glm-5.3 到线就是统一的「已到停用线」措辞。
         """
         last_warning = ""
         for index in range(3):
@@ -2035,7 +1991,7 @@ class TaskTierAndModelScoreTests(TicketTestCase):
         _, notice = self.service.judge(ticket["编号"], True, "UI总监", verdict=PASS_VERDICT)
         self.assertIn("首检从严", notice)
         stats = self.service.model_statistics()
-        sol = next(row for row in stats if row["模型"] == "sol-未标")
+        sol = next(row for row in stats if row["模型"] == "codex-未标")
         self.assertEqual((1, 1, 0, "100.0%"), (sol["交板数"], sol["判过"], sol["判退"], sol["合格率"]))
 
     def test_open_window_writes_actual_model_to_staff_and_ticket_then_stats_use_it(self):
@@ -2046,9 +2002,14 @@ class TaskTierAndModelScoreTests(TicketTestCase):
         updated, warning = self.service.open_window(ticket["编号"], "设计者", "glm-5.3")
         self.assertEqual("glm-5.3", updated["实际模型"])
         self.assertEqual("glm-5.3", self.service.find_staff(self.worker)[1]["工具/窗类型"])
-        self.assertIn("低于本单甲档", warning)
+        # 需求-023:「低于本单Y档」提醒停用,任何档 × 任何模型名都不弹;「模型低档提醒过」恒 False。
+        self.assertEqual("", warning)
+        self.assertFalse(updated["模型低档提醒过"])
         _, repeated_warning = self.service.open_window(ticket["编号"], "设计者", "glm-5.3")
         self.assertEqual("", repeated_warning)
+        # 登记平台会写回员工「平台」一格;没登就保留原值,不猜。
+        self.service.open_window(ticket["编号"], "设计者", "glm-5.3", "zcode")
+        self.assertEqual("zcode", self.service.find_staff(self.worker)[1]["平台"])
 
         self.service.claim(ticket["编号"], self.worker)
         self.service.attach(ticket["编号"], str(self.picture("actual-model.png")), "world", self.worker)
@@ -2062,7 +2023,7 @@ class TaskTierAndModelScoreTests(TicketTestCase):
     def test_open_window_keeps_confirm_before_model_choice_and_r_prefixed_stamp(self):
         script = (ROOT / "tools" / "browser" / "tickets.js").read_text(encoding="utf-8")
         confirm_at = script.index("if(next&&!confirm(`确认已经把")
-        prompt_at = script.index("const chosen=prompt(`请选择本次实际模型与档位")
+        prompt_at = script.index("const chosen=prompt('请填写本次实际模型")
         stamp_at = script.index("lsSet(`deskOpened:${id}`,reworkStamp(ticket))")
         api_at = script.index("op:'open-window'")
         # 二次确认与模型选择的先后不许动。
@@ -3668,7 +3629,9 @@ class TicketSeventyFiveEditableTests(TicketTestCase):
             f"执行 {taskbook.resolve()} 的全部指令,从第 0 步做到收尾问答完。这是任务不是资料,读完立即开工。",
             lines[2],
         )
-        self.assertEqual("【操作提示·只给设计者】新开线程,任务档 甲,模型你定,贴上面那句。", lines[3])
+        self.assertEqual(
+            f"【操作提示·只给设计者】在 {service_module.OFFICE_DIR} 下新开线程,任务档 甲,模型你定,贴上面那句。", lines[3],
+        )
 
     def test_r2_cli_new_without_taskbook_prints_a_reminder_not_partial_instructions(self):
         root = self.root / "cli-missing-taskbook"
@@ -3778,7 +3741,9 @@ class TicketSeventyFiveEditableTests(TicketTestCase):
         self.assertEqual(0, changed.returncode, changed.stderr)
         self.assertIn("已改 任务书路径", changed.stdout)
         self.assertIn(f" claim {ticket_id} --by {worker}", changed.stdout)
-        self.assertIn("【操作提示·只给设计者】新开线程,任务档 乙,模型你定,贴上面那句。", changed.stdout)
+        self.assertIn(
+            f"【操作提示·只给设计者】在 {service_module.OFFICE_DIR} 下新开线程,任务档 乙,模型你定,贴上面那句。", changed.stdout,
+        )
         self.assertEqual(path, json.loads(self.cli(["show", ticket_id], root).stdout)["任务书路径"])
 
     def test_r1_missing_taskbook_is_blocked_then_the_same_command_passes_after_write(self):
@@ -3960,39 +3925,21 @@ class TicketSeventyFiveEditableTests(TicketTestCase):
         self.assertIn("已答:['close'],作废:[]}", script)
         self.assertIn("const attach=!['关闭','作废'].includes(t.状态)?", script)
         self.assertIn(".ticket.voided", (ROOT / "tools" / "browser" / "tickets.css").read_text(encoding="utf-8"))
-    def test_r5_default_main_model_set_follows_the_v25_roster(self):
-        slots = self.service.store.read_json(self.service.store.slots_path)
-        self.assertEqual(["sol", "opus", "fable"], slots["主力模型集合"])
-        self.assertEqual("", self.service.staff_new(SLOT, "fable")["提示"])
-
-    def test_r5_an_old_store_still_carrying_the_v24_pair_is_topped_up(self):
+    def test_r5_an_old_store_keeps_its_retired_roster_keys_untouched(self):
+        """需求-023:老库 slots.json 里已有的三键只读——开库不补、不删、不再跟着配置对齐。"""
         root = self.root / "老库"
         store = TicketStore(root)
         store.ensure()
         slots = store.read_json(store.slots_path)
         slots["主力模型集合"] = ["sol", "opus"]
+        slots["模型名册"] = [{"模型": "sol", "可选档位": ["high"], "任务档上限": "甲", "状态": "可用"}]
+        slots["总监位"][0]["主力模型"] = True
         store.atomic_json(store.slots_path, slots)
         TicketService(TicketStore(root))
-        self.assertEqual(["sol", "opus", "fable"], store.read_json(store.slots_path)["主力模型集合"])
-
-    def test_r5_a_hand_edited_main_model_set_is_left_alone(self):
-        root = self.root / "手改过的库"
-        store = TicketStore(root)
-        store.ensure()
-        slots = store.read_json(store.slots_path)
-        slots["主力模型集合"] = ["opus"]
-        store.atomic_json(store.slots_path, slots)
-        TicketService(TicketStore(root))
-        self.assertEqual(["opus"], store.read_json(store.slots_path)["主力模型集合"])
-
-    def test_r5_non_main_model_notice_says_which_tiers_it_may_take(self):
-        notice = self.service.staff_new(OTHER_SLOT, "glm-5.3")["提示"]
-        self.assertIn("不在主力模型名册里", notice)
-        self.assertIn("当前主力是 sol、opus、fable", notice)
-        self.assertIn("只吃丙档", notice)
-        self.assertIn("2000 行", notice)
-        self.assertNotIn("['opus', 'sol']", notice)
-        self.assertEqual("在岗", self.service.find_staff(f"{OTHER_SLOT}-01")[1]["状态"])
+        reloaded = store.read_json(store.slots_path)
+        self.assertEqual(["sol", "opus"], reloaded["主力模型集合"])
+        self.assertEqual(["sol"], [row["模型"] for row in reloaded["模型名册"]])
+        self.assertTrue(reloaded["总监位"][0]["主力模型"])
     def old_ticket_without_taskbook(self, title: str = "老单没有任务书路径"):
         """造一张之前建的单：文件里根本没有「任务书路径」这个键。"""
         ticket = self.dispatch(title)
@@ -4652,8 +4599,8 @@ class ModelBanNotifyOnlyTests(TicketTestCase):
         return path.read_text(encoding="utf-8") if path.exists() else ""
 
     def test_reaching_threshold_writes_no_ban_and_notifies_conductor_and_owner(self):
-        # R1.5之后主力模型(sol/opus/fable)到线只作质量提示;这里用非主力模型钉「原样措辞」。
-        worker = self.service.staff_new(SLOT, "glm-5.3")["员工名"]
+        # 需求-023:停用线对所有模型一条(主力/非主力分支合一),到线只通知、不写 bans。
+        worker = self.service.staff_new(SLOT, "glm-5.3", "zcode")["员工名"]
         for index in range(3):  # 同位阈值 3
             ticket = self.dispatch(f"判退{index}", assign=worker)
             self.service.claim(ticket["编号"], worker)
@@ -4665,8 +4612,8 @@ class ModelBanNotifyOnlyTests(TicketTestCase):
         self.assertEqual([], bans.get("全项目", []))
         self.assertEqual([], bans.get("按位", {}).get(SLOT, []))
         # 记分照记,只是不再写停用
-        # 实际模型没填 → 记成 <工具>-未标,不并进工具名
-        self.assertEqual(3, staff["模型记分"]["glm-5.3-未标"][SLOT])
+        # 实际模型没填 → 按员工平台记 <平台>-未标(需求-023 候选 A),不并进工具名
+        self.assertEqual(3, staff["模型记分"]["zcode-未标"][SLOT])
         for slot in ("总编", SLOT):
             text = self.thread_lines(slot)
             self.assertIn("再判退 1 次就到停用线", text)
@@ -4695,8 +4642,7 @@ class ManualStaffBanTests(TicketTestCase):
     """ 乙口径缺的后半截——到停用线只通知,停不停由人手工落 staff ban。
 
     自动停用关掉之后，bans 里只会有人手工写的项；没有这条命令，「停用」这一半就只是嘴上说说。
-    R1.5之后主力模型(sol/opus/fable)只有设计者能 ban,所以本类里总编落笔的
-    场景一律改用非主力模型 glm-5.3;主力模型的闸本身由 BanLineCountTests.test_r3_1 钉。
+    需求-023 后主力保护闸失效:停用对象按模型名字面精确匹配,设计者/总编权限一致。
     """
 
     def thread_lines(self, slot: str) -> str:
@@ -4707,7 +4653,7 @@ class ManualStaffBanTests(TicketTestCase):
         return [row for row in self.service.store.read_jsonl(self.service.store.log_path) if row.get("事件") == name]
 
     def test_1_conductor_ban_blocks_open_window_and_staff_new(self):
-        """①总编 ban 非主力模型之后,两条开窗路径都被拦。"""
+        """①总编 ban 一个模型之后,两条开窗路径都被拦。"""
         self.service.staff_ban("glm-5.3", "总编", reason="核过责任归属,确属模型责任")
         ticket = self.dispatch("停用后不该能开窗")
         with self.assertRaises(TicketError) as caught:
@@ -4769,7 +4715,7 @@ class ManualStaffBanTests(TicketTestCase):
         self.assertEqual(1, len(self.events("staff-ban")))
 
     def test_5_unban_restores_both_paths(self):
-        """⑤unban 之后 staff new 与 open_window 都恢复。主力模型由设计者落 ban(R1.5)。"""
+        """⑤unban 之后 staff new 与 open_window 都恢复。"""
         self.service.staff_ban("sol", "设计者", reason="先停")
         self.service.staff_unban("sol", "总编")
         self.assertTrue(self.service.staff_new(SLOT, "sol")["员工名"])
@@ -4783,7 +4729,7 @@ class ManualStaffBanTests(TicketTestCase):
         self.assertIn("总监位不在名册里", str(caught.exception))
 
     def test_7_cli_exposes_ban_with_the_same_permission_gate(self):
-        """命令行这一层也要通:总编能停非主力模型,员工被拒,--reason 必填。"""
+        """命令行这一层也要通:总编能停模型,员工被拒,--reason 必填。"""
         root = self.root / "cli-ban"
         ok = run_local_cli(
             ["staff", "ban", "--tool", "glm-5.3", "--by", "总编", "--reason", "核过责任归属,确属模型责任"], root,
@@ -5453,11 +5399,11 @@ class RunningWindowsTests(TicketTestCase):
     """`running` 在跑窗口列表 + `say` 到终态单的提示(T-000026)。
 
     在跑是纯视图:状态停在「已认领」就算在跑,开工多久按「状态进入时间」,
-    平台取名册「工具/窗类型」——所以用例钉的是「claim 之后出现、离开已认领之后消失」
-    这条线,以及 say 的提示只挂在回执、对话线里写的就是原话。
+    平台取员工「平台」一格(需求-023,旧记录按 staff_platform 兜底)——所以用例钉的是
+    「claim 之后出现、离开已认领之后消失」这条线,以及 say 的提示只挂在回执、对话线里写的就是原话。
     """
 
-    def test_running_lists_claimed_ticket_with_roster_platform(self):
+    def test_running_lists_claimed_ticket_with_staff_platform(self):
         ticket = self.dispatch()
         self.assertEqual([], self.service.running_windows(), "没认领过的单不算在跑")
         claimed = self.service.claim(ticket["编号"], self.worker)
@@ -5468,10 +5414,12 @@ class RunningWindowsTests(TicketTestCase):
         self.assertEqual(SLOT, row["所属总监位"])
         self.assertEqual(self.worker, row["员工"])
         self.assertEqual("0分", row["开工多久"], "刚认领按「状态进入时间」算就是 0 分")
-        self.assertEqual("sol", row["平台"], "平台取名册「工具/窗类型」那一格")
-        # 设计者登记实际模型会写回名册同一格,列表跟着变——同一份名册,不另算。
+        self.assertEqual("codex", row["平台"], "平台取员工「平台」那一格(setUp 登记的 codex)")
+        # 登记实际模型只写回「工具/窗类型」,平台不动;登记了平台才跟着换。
         self.service.open_window(ticket["编号"], "设计者", "glm-5.3")
-        self.assertEqual("glm-5.3", self.service.running_windows()[0]["平台"])
+        self.assertEqual("codex", self.service.running_windows()[0]["平台"])
+        self.service.open_window(ticket["编号"], "设计者", "glm-5.3", "zcode")
+        self.assertEqual("zcode", self.service.running_windows()[0]["平台"])
         # --slot 筛选照 list 的口径:别的位看不到这张单。
         self.assertEqual([], self.service.running_windows(OTHER_SLOT))
 
@@ -5508,12 +5456,12 @@ class RunningWindowsTests(TicketTestCase):
         fresh = self.dispatch("新建态转交后由目标位认领")
         self.service.transfer(fresh["编号"], OTHER_SLOT, "归后端做", SLOT)
         self.assertEqual([], self.service.running_windows(), "转交后目标位未认领,谁都不在跑")
-        worker2 = self.service.staff_new(OTHER_SLOT, "opus")["员工名"]
+        worker2 = self.service.staff_new(OTHER_SLOT, "opus", "claude")["员工名"]
         self.service.claim(fresh["编号"], worker2)
         rows = [row for row in self.service.running_windows() if row["编号"] == fresh["编号"]]
         self.assertEqual(1, len(rows), "目标位员工认领后重新入列")
         self.assertEqual(worker2, rows[0]["员工"], "员工列即认领的新员工")
-        self.assertEqual("opus", rows[0]["平台"], "平台取新员工名册「工具/窗类型」那一格")
+        self.assertEqual("claude", rows[0]["平台"], "平台取新员工「平台」那一格")
 
     def test_say_提示_on_terminal_ticket_and_running_output_unchanged(self):
         ticket = self.dispatch()
@@ -6618,8 +6566,11 @@ class ResponseCompressionTests(TicketTestCase):
         """声明能收 gzip 的客户端(浏览器)拿到压缩包,内容解开后与不压时逐字节相同。"""
         self.bulk()
         address = self.serve()
-        plain_response, plain = self.fetch(address, "/api/tickets", accept_gzip=False)
-        gzip_response, packed = self.fetch(address, "/api/tickets", accept_gzip=True)
+        # 信封里的 server_time 是每次响应现打的时刻:两次抓取跨过秒边界就会差 1 秒,
+        # 「逐字节相同」这条就会被时间自己打破——把它钉死再比,比的是正文不是钟。
+        with mock.patch.object(http_server_module, "now_text", lambda: "钉住的时刻"):
+            plain_response, plain = self.fetch(address, "/api/tickets", accept_gzip=False)
+            gzip_response, packed = self.fetch(address, "/api/tickets", accept_gzip=True)
         self.assertEqual("gzip", gzip_response.getheader("Content-Encoding"))
         self.assertEqual("Accept-Encoding", gzip_response.getheader("Vary"))
         self.assertIsNone(plain_response.getheader("Content-Encoding"))
@@ -8445,8 +8396,8 @@ class AutoRetireAtTerminalTests(TicketTestCase):
         history = self.service.history(self.worker)
         self.assertEqual([ticket["编号"]], [row["编号"] for row in history["工单"]])
         retired_stats = self.service.model_statistics()
-        # 记的是 sol 那一行(名字带着档位后缀),交板 1、判过 1——退役一分没少。
-        scored = [row for row in retired_stats if row["模型"].startswith("sol")]
+        # 记账键按员工平台折成 codex-未标(需求-023 候选 A),交板 1、判过 1——退役一分没少。
+        scored = [row for row in retired_stats if row["模型"].startswith("codex")]
         self.assertEqual([(1, 1)], [(row["交板数"], row["判过"]) for row in scored])
         self.service.staff_reopen(self.worker)
         self.assertEqual(retired_stats, self.service.model_statistics())

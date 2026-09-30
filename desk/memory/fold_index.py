@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """fold_index.py:把记忆索引(MEMORY.md)超限的整节原样折成二级入口。
 
-规则出处:desk/memory/规范.md §5。纯标准库,Python 3.8+;读写一律 UTF-8、无 BOM、LF。
+规则出处:desk/memory/规范.md §5。纯标准库,Python 3.8+;输入 BOM/CRLF 先规范化,写出一律 UTF-8、无 BOM、LF。
 
 用法:
   python fold_index.py <索引文件> [--section "<节名>"]... [--slug <slug>]...
@@ -72,12 +72,9 @@ def read_text(path):
             data = f.read()
     except OSError as e:
         raise FoldError('读不到 %s: %s' % (path, e))
-    if data.startswith(b'\xef\xbb\xbf'):
-        raise FoldError('%s 带 UTF-8 BOM;记忆文件要求无 BOM,先去掉再折' % path)
-    if b'\r' in data:
-        raise FoldError('%s 含 CR(CRLF 换行);记忆文件要求 LF,先转换再折' % path)
     try:
-        return data.decode('utf-8')
+        # 索引与已有分册都按规范化后的文本核守恒,写出仍无 BOM、只含 LF。
+        return data.decode('utf-8-sig').replace('\r\n', '\n').replace('\r', '\n')
     except UnicodeDecodeError as e:
         raise FoldError('%s 不是合法 UTF-8: %s' % (path, e))
 

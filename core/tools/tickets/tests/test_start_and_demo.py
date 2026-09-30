@@ -149,12 +149,11 @@ class StartScriptAndDemoTests(unittest.TestCase):
         crew = meta["staff"]["总监位"]
         self.assertEqual(2, len(crew[first]["员工"]))
         self.assertEqual(1, len(crew[second]["员工"]))
-        # 演示员工登记的模型取随仓配置「主力模型集合」的第一个,且它就在「模型名册」里(不是名册外的占位名)。
-        shipped = json.loads(SHIPPED_CONFIG.read_text(encoding="utf-8"))
-        default_model = shipped["主力模型集合"][0]
-        self.assertIn(default_model, [row["模型"] for row in shipped["模型名册"]])
+        # 演示员工只标平台(需求-023):播种按平台口径登记,--tool 走默认「待定」,不再依赖主力名册。
         tools = {member["工具/窗类型"] for slot in (first, second) for member in crew[slot]["员工"]}
-        self.assertEqual({default_model}, tools)
+        self.assertEqual({"待定"}, tools)
+        platforms = {member.get("平台", "") for slot in (first, second) for member in crew[slot]["员工"]}
+        self.assertEqual({"claude", "codex"}, platforms)
         self.assertTrue(all(ticket["指派给"] for ticket in tickets))
         # 总编在已认领那一位的对话线上留过一句
         thread = self.desk.api(

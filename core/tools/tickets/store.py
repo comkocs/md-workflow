@@ -5,20 +5,62 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import re
 import sqlite3
 import threading
 import time
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-from .config import BAN_THRESHOLDS, LEGACY_MAIN_MODELS, MAIN_MODELS, MODEL_ROSTER
+from .config import BAN_THRESHOLDS
 from .model import SLOTS, TicketError, now_text, with_ticket_defaults
 
 
 # 本机数据根:环境变量 TICKET_DESK_ROOT 优先,否则落在仓内 core/data/(已进 core/.gitignore,真数据不进仓)。
 DATA_ROOT_ENV = "TICKET_DESK_ROOT"
 DEFAULT_ROOT = Path(__file__).resolve().parents[2] / "data"
+STALE_LOCK_SECONDS = 3600
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid > 0xFFFFFFFF:
+        return True
+    if os.name == "nt":
+        # Windows 的 os.kill(pid, 0) 会走 TerminateProcess,不能用它探活。
+        import ctypes
+        from ctypes import wintypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+        kernel.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+        kernel.CloseHandle.restype = wintypes.BOOL
+        handle = kernel.OpenProcess(0x1000, False, pid)
+        if not handle:
+            # 权限不足或其他探测失败不是进程已死的证据。
+            return ctypes.get_last_error() != 87
+        try:
+            code = wintypes.DWORD()
+            if not kernel.GetExitCodeProcess(handle, ctypes.byref(code)):
+                return True
+            return code.value == 259
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+    return True
+
+
+def _lock_identity(stat: os.stat_result) -> tuple[int, int, int, int]:
+    return stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_size
 
 
 class TicketStore:
@@ -60,28 +102,14 @@ class TicketStore:
             self.thread_path(slot).touch(exist_ok=True)
         self._migrate_metadata()
 
-    # 主力集合保留兼容字段；具体可选档位、任务档上限与退役状态以模型名册为准。
-    # 三样都来自配置文件(config.py),这里只是新库的初值;库里总监手改过的以库为准。
-    MAIN_MODELS = list(MAIN_MODELS)
-    LEGACY_MAIN_MODELS = list(LEGACY_MAIN_MODELS)
-    MODEL_ROSTER = [dict(row) for row in MODEL_ROSTER]
-
-    @staticmethod
-    def _roster_copy() -> list[dict[str, Any]]:
-        return [
-            dict(row, 可选档位=list(row.get("可选档位", [])), **(
-                {"档位任务档": dict(row["档位任务档"])} if "档位任务档" in row else {}
-            ))
-            for row in TicketStore.MODEL_ROSTER
-        ]
+    # 需求-023(2026-09-30)起「主力模型集合」「旧版主力模型集合」「模型名册」三键停用:
+    # 新库不再写它们;老库 slots.json 里已有的三键照读不报错、不补、不删(只留作历史数据)。
 
     @staticmethod
     def _default_slots() -> dict[str, Any]:
         return {
-            "主力模型集合": list(TicketStore.MAIN_MODELS),
-            "模型名册": TicketStore._roster_copy(),
             "停用阈值": dict(BAN_THRESHOLDS),
-            "总监位": [{"名字": name, "启用": True, "主力模型": True} for name in SLOTS],
+            "总监位": [{"名字": name, "启用": True} for name in SLOTS],
         }
 
     @staticmethod
@@ -96,52 +124,18 @@ class TicketStore:
     def _migrate_metadata(self) -> None:
         slots = self.read_json(self.slots_path, self._default_slots())
         changed_slots = False
-        if "主力模型集合" not in slots:
-            slots["主力模型集合"] = list(self.MAIN_MODELS)
-            changed_slots = True
-        elif self.LEGACY_MAIN_MODELS and sorted(slots["主力模型集合"]) == sorted(self.LEGACY_MAIN_MODELS):
-            # 老库里存的还是配置里「旧版主力模型集合」那一组,名册扩了之后要跟着补;
-            # 只认「一字不差还是旧默认值」这一种情况,总监手改过的集合不动。
-            slots["主力模型集合"] = list(self.MAIN_MODELS)
-            changed_slots = True
         if "停用阈值" not in slots:
             slots["停用阈值"] = dict(BAN_THRESHOLDS)
             changed_slots = True
-        if "模型名册" not in slots:
-            slots["模型名册"] = self._roster_copy()
-            changed_slots = True
-        else:
-            # 老库名册向配置看齐的两条,都只**补**不删,总监手加的行与档位不动:
-            #   ① 配置里按档位细分任务档的模型,库里那一行缺的档位与「档位任务档」补上;
-            #   ② 配置里标了退役的模型,库里那一行跟着退役(退役的不能再 staff new)。
-            configured = {str(row["模型"]): row for row in self.MODEL_ROSTER}
-            for row in slots["模型名册"]:
-                wanted = configured.get(str(row.get("模型", "")))
-                if not wanted:
-                    continue
-                if "档位任务档" in wanted:
-                    levels = row.setdefault("可选档位", [])
-                    for level in wanted.get("可选档位", []):
-                        if level not in levels:
-                            levels.append(level)
-                            changed_slots = True
-                    if "档位任务档" not in row:
-                        row["档位任务档"] = dict(wanted["档位任务档"])
-                        changed_slots = True
-                if wanted.get("状态") == "退役" and row.get("状态") != "退役":
-                    row["状态"] = "退役"
-                    changed_slots = True
+        # 老库里已有的「主力模型集合」「模型名册」与位行「主力模型」字段一律不动:
+        # 三键停用(需求-023)后代码不再读它们,补齐/退役同步逻辑随之退役,数据只留作历史。
         slot_rows = slots.setdefault("总监位", [])
-        for row in slot_rows:
-            if "主力模型" not in row:
-                row["主力模型"] = True
-                changed_slots = True
         # 配置里加了位,库里的「总监位」清单也要跟着补——网页的位列表读的是它。
         # 只补不删:配置里去掉的位,库里那一行留着(它名下的单与对话线还在)。
         listed = {str(row.get("名字", "")) for row in slot_rows}
         for slot in SLOTS:
             if slot not in listed:
-                slot_rows.append({"名字": slot, "启用": True, "主力模型": True})
+                slot_rows.append({"名字": slot, "启用": True})
                 changed_slots = True
         if changed_slots:
             self.atomic_json(self.slots_path, slots)
@@ -190,19 +184,47 @@ class TicketStore:
                     descriptor = os.open(self.lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
                     os.write(descriptor, f"pid={os.getpid()} time={now_text()}".encode("utf-8"))
                 except FileExistsError:
+                    if self._clear_stale_lock():
+                        continue
                     if time.monotonic() >= deadline:
                         raise TicketError("工单盘正被另一扇窗写入，请稍后再试。")
                     time.sleep(0.05)
+            identity = _lock_identity(os.fstat(descriptor))
+            # 锁文件本身保持独占;Windows 开着句柄会拦住超龄锁的回收。
+            os.close(descriptor)
             self._lock_state.depth = 1
             try:
                 yield
             finally:
                 self._lock_state.depth = 0
-                os.close(descriptor)
                 try:
-                    self.lock_path.unlink()
+                    # 超龄锁可能已被回收,释放时不能删后来者的新锁。
+                    if _lock_identity(self.lock_path.stat()) == identity:
+                        self.lock_path.unlink()
                 except FileNotFoundError:
                     pass
+
+    def _clear_stale_lock(self) -> bool:
+        try:
+            snapshot = self.lock_path.stat()
+            payload = self.lock_path.read_text(encoding="utf-8")
+            match = re.fullmatch(r"pid=(\d+) time=(.+)", payload.strip())
+            dead = bool(match and int(match[1]) > 0 and not _pid_alive(int(match[1])))
+            stamp = snapshot.st_mtime
+            if match:
+                try:
+                    stamp = datetime.fromisoformat(match[2]).timestamp()
+                except ValueError:
+                    pass
+            if not dead and time.time() - stamp < STALE_LOCK_SECONDS:
+                return False
+            # 读取后锁已换过或仍在写元数据,留给下一次重试。
+            if _lock_identity(self.lock_path.stat()) != _lock_identity(snapshot):
+                return False
+            self.lock_path.unlink()
+            return True
+        except (OSError, UnicodeError):
+            return False
 
     @staticmethod
     def read_json(path: Path, default: Any = None) -> Any:

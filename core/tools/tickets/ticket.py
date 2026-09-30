@@ -20,8 +20,9 @@ if __package__ in {None, ""}:
         CONDUCTOR_SLOT, PLATFORM_SLOT, REVIEW_SLOT, SLOTS, TASK_TIERS, TIER_MID, TicketError,
         deliverable_candidate, deliverable_key, is_image_deliverable, normalize_lines, resolve_under_root,
     )
-    from tools.tickets.config import MAIN_MODELS
+    from tools.tickets.config import ROLES, add_slot
     from tools.tickets import extension_loader
+    from tools.tickets.config import OFFICE_DIR, PATH as CONFIG_PATH
     from tools.tickets.auth import AccountManager
     from tools.tickets.http_server import serve
     from tools.tickets.service import (
@@ -37,8 +38,9 @@ else:
         CONDUCTOR_SLOT, PLATFORM_SLOT, REVIEW_SLOT, SLOTS, TASK_TIERS, TIER_MID, TicketError,
         deliverable_candidate, deliverable_key, is_image_deliverable, normalize_lines, resolve_under_root,
     )
-    from .config import MAIN_MODELS
+    from .config import ROLES, add_slot
     from . import extension_loader
+    from .config import OFFICE_DIR, PATH as CONFIG_PATH
     from .auth import AccountManager
     from .http_server import serve
     from .service import (
@@ -51,7 +53,7 @@ else:
     from . import channel as channel_config
 
 # 这些命令只在本机操作数据库或起服务，从来不走远程通道。
-OFFLINE_COMMANDS = {"serve", "migrate", "dump", "account", "env"}
+OFFLINE_COMMANDS = {"serve", "migrate", "dump", "account", "env", "slot-add"}
 DEGRADABLE_OPTIONS = {"--taskbook-client-checked": 1}
 
 
@@ -137,6 +139,12 @@ def parser() -> argparse.ArgumentParser:
     root = HumanArgumentParser(prog="ticket.py", description="工单台:派单、判卷、复检、对话线与员工名册的命令行")
     commands = root.add_subparsers(dest="command", required=True)
 
+    slot_add = commands.add_parser("slot-add", help="给本机配置的位表加位，校验通过后写回配置文件")
+    slot_add.add_argument("name", help="新增位名；不能与现有位重名")
+    slot_add.add_argument("--role", choices=ROLES, default="", help="特殊角色，仍须满足每种角色恰好一位")
+    slot_add.add_argument("--relay", action="store_true", help="这个位只发需求")
+    slot_add.add_argument("--scope", default="", help="只发需求位的对口事务说明")
+
     new = commands.add_parser("new", help="新建派单")
     new.add_argument("--type", default="派单", choices=["派单", "疑问", "阻塞"])
     new.add_argument("--slot", required=True)
@@ -191,7 +199,8 @@ def parser() -> argparse.ArgumentParser:
     editing.add_argument("--reason", help="改判退责任的理由；--blame 专用，不能为空")
     editing.add_argument("--tier", choices=list(TASK_TIERS),
                          help=f"改任务档：新建/已认领/返工三态，本位总监或{CONDUCTOR_SLOT};"
-                              "任务书重写换了档就顺手把字段改齐,别让设计者按旧档选模型")
+                              "任务书重写换了档就顺手把字段改齐。档是给拍板人分类用,"
+                              "开什么模型由拍板人开窗时自选")
     editing.add_argument(
         "--exempt-judging", choices=["是", "否"],
         help="置/撤「模块级免判卷」:设计者取消了该模块的判卷与复检,"
@@ -390,8 +399,11 @@ def parser() -> argparse.ArgumentParser:
     staff_commands = staff.add_subparsers(dest="staff_command", required=True)
     staff_new = staff_commands.add_parser("new")
     staff_new.add_argument("--slot", required=True)
-    staff_new.add_argument("--tool", default=MAIN_MODELS[0] if MAIN_MODELS else "待定",
-                           help="这扇窗跑的模型(名册见配置文件「模型名册」);不填默认第一个主力模型")
+    staff_new.add_argument("--tool", default="待定",
+                           help="这扇窗实际跑的模型,自由文本仅记录用(不校验名册、不按模型卡档);不填记「待定」")
+    staff_new.add_argument("--platform", default="",
+                           help="开窗平台：claude/codex/vscode/zcode 四选一或留空。员工与窗口只标平台；"
+                                "档是给拍板人分类用，开什么模型由拍板人开窗时自选")
     staff_retire = staff_commands.add_parser("retire")
     staff_retire.add_argument("name")
     staff_reopen = staff_commands.add_parser("reopen")
@@ -519,6 +531,16 @@ def parser() -> argparse.ArgumentParser:
 
     environment = commands.add_parser("env", help="自检一行:本机还是远程、连哪台、令牌文件路径与在不在、本机库在哪、配置从哪一级取到")
     environment.add_argument("--probe", action="store_true", help="显式向服务器探测一次协议版本")
+    # 开窗目录从哪来(需求-022):总 -h、new -h、set -h 三处都看得到。new 与 set --taskbook 是 CLI 上
+    # 仅有的两处会打出开窗三行的命令。原样排版(Raw),免得 argparse 把配置路径折成两截。
+    window_dir_note = (
+        f"开窗目录取自 {channel_config.forward_slashes(str(CONFIG_PATH))} 的「办公目录」键,当前值 {OFFICE_DIR}"
+        "(开窗指令第三行「在 <目录> 下新开线程」)。\n"
+        "远程模式以服务端那份配置为准(三行由服务端生成);换整份配置用环境变量 TICKET_DESK_CONFIG。"
+    )
+    for shown in (root, commands.choices["new"], commands.choices["set"]):
+        shown.epilog = window_dir_note
+        shown.formatter_class = argparse.RawDescriptionHelpFormatter
     extension_loader.add_cli_parsers(commands)
     return root
 
@@ -757,7 +779,7 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
         return result, "\n".join(lines)
     if command == "staff":
         if args.staff_command == "new":
-            member = service.staff_new(args.slot, args.tool)
+            member = service.staff_new(args.slot, args.tool, getattr(args, "platform", ""))
             return member, member["员工名"] + (f"\n{member['提示']}" if member.get("提示") else "")
         if args.staff_command == "retire":
             member = service.staff_retire(args.name)
@@ -782,7 +804,7 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
         # 履历走 history / memory export，模型合格率按模型统计，两者都读全量，退役一分不丢。
         members = service.list_staff(args.slot or None, args.all)
         rows = "\n".join(
-            f"{row['员工名']} · {row['工具/窗类型']} · {row['状态']}"
+            f"{row['员工名']} · {TicketService.staff_platform(row) or '平台未标'} · {row['工具/窗类型']} · {row['状态']}"
             + (" · 固定工位" if row.get("固定工位") else "")
             for row in members
         )
@@ -822,7 +844,18 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
             ]
             return rows, "\n".join(lines) or "没有待清的非业务阻塞。"
         rows = service.list_tickets(args.slot, args.state, args.ticket_type, args.shot_pending)
-        return rows, "\n".join(compact_ticket(row) for row in rows) or "没有符合条件的工单。"
+        # 已指派的单在行尾补「员工(平台)」:员工与窗口只标平台(需求-023),list 也要看得见平台。
+        platform_of = {}
+        for group in (service.store.load_staff().get("总监位") or {}).values():
+            for member in group.get("员工", []):
+                platform_of[str(member.get("员工名", ""))] = TicketService.staff_platform(member)
+
+        def _line(row: dict[str, Any]) -> str:
+            worker = str(row.get("指派给", "") or "")
+            suffix = f" · {worker}({platform_of[worker] or '平台未标'})" if worker in platform_of else ""
+            return compact_ticket(row) + suffix
+
+        return rows, "\n".join(_line(row) for row in rows) or "没有符合条件的工单。"
     if command == "running":
         # 在跑窗口列表:与网页 /api/running-windows 同一个来源(service.running_windows),不另算第二遍。
         rows = service.running_windows(args.slot)
@@ -1198,6 +1231,15 @@ def main(argv: list[str] | None = None) -> int:
         _prepare_shot_exempt_check(args)
         _prepare_deliverable_check(args)
         _prepare_submit_hygiene(args, arguments)
+        if args.command == "slot-add":
+            try:
+                row, path = add_slot(args.name, role=args.role, relay=args.relay, scope=args.scope)
+            except RuntimeError as exc:
+                raise TicketError(str(exc)) from exc
+            payload = {"位": row, "配置": str(path)}
+            print(json.dumps({"ok": True, "result": payload}, ensure_ascii=False) if json_output else
+                  f"已加位：{row['名字']} · 配置 {path}")
+            return 0
         channel = channel_config.resolve(force_local)
         if args.command == "env":
             # 自检永远不出网、不碰库、不读令牌内容:配置再烂也要把它原样报出来。
@@ -1530,4 +1572,9 @@ def _is_mutating(args: argparse.Namespace) -> bool:
 
 
 if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
     raise SystemExit(main())

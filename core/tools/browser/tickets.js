@@ -1,7 +1,7 @@
 /* 工单台：http(s) 走同源 API；file:// 只读 bundle 回落。 */
 "use strict";
 
-/* 位表配置(位名、特殊位、任务档、模型名册)与服务端是同一份配置文件,网页里不另抄:
+/* 位表配置(位名、特殊位、任务档)与服务端是同一份配置文件,网页里不另抄:
    服务模式下由服务端现生成 /desk-config.js,在本文件之前同步载入(window.TICKET_DESK_CONFIG);
    离线(file://)时从 ticket build 生成的离线整包里取(window.TICKET_DESK_BUNDLE.位表配置)。
    ★两处都取不到时名单为空——宁可空着让人看出没接上,也不许按一份抄来的旧名单悄悄跑。 */
@@ -66,7 +66,7 @@ async function writeFile(dir,name,text) { const file=await dir.getFileHandle(nam
 async function writeJson(dir,name,value) { await writeFile(dir,name,JSON.stringify(value,null,2)+"\n"); }
 
 function blankData() {
-  return {slots:{主力模型集合:(DESK_CONFIG.主力模型集合||[]).slice(),模型名册:(DESK_CONFIG.模型名册||[]).map(row=>({...row})),停用阈值:{同位:3,全项目:5},总监位:DEFAULT_SLOTS.map(名字=>({名字,启用:true,主力模型:true}))},staff:{模型记分:{},模型停用:{全项目:[],按位:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,[]]))},总监位:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,{下一个编号:1,员工:[]}]))},items:[],threads:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,[]])),log:[],modelStats:[],state:{值:{},最近改动:{},未填:[],项:[]}};
+  return {slots:{停用阈值:{同位:3,全项目:5},总监位:DEFAULT_SLOTS.map(名字=>({名字,启用:true}))},staff:{模型记分:{},模型停用:{全项目:[],按位:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,[]]))},总监位:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,{下一个编号:1,员工:[]}]))},items:[],threads:Object.fromEntries(DEFAULT_SLOTS.map(s=>[s,[]])),log:[],modelStats:[],state:{值:{},最近改动:{},未填:[],项:[]}};
 }
 function fallbackData() { return window.TICKET_DESK_BUNDLE || blankData(); }
 
@@ -232,10 +232,10 @@ function staffFor(slot) { return app.data?.staff?.总监位?.[slot]?.员工||[];
 /* 呼出名单默认只显示在岗——非固定工位到终态会自动收窗，攒下来的编号
    会把「现在能派给谁」这件事淹掉。已收窗的收进一个默认折起的 details，点开仍可查履历；
    数据一份没删，模型合格率也照旧读全量（账按模型统计，不按编号）。 */
-function staffChip(m){return `<span class="staff ${m.状态==='在岗'?'on':'off'}" data-staff="${esc(m.员工名)}">${esc(m.员工名)} · ${esc(m['工具/窗类型'])} · ${esc(m.状态)}${m.固定工位?' · 固定工位':''}</span>`}
+function staffChip(m){return `<span class="staff ${m.状态==='在岗'?'on':'off'}" data-staff="${esc(m.员工名)}">${esc(m.员工名)} · ${esc(platformOf(m)||'平台未标')} · ${esc(m['工具/窗类型'])} · ${esc(m.状态)}${m.固定工位?' · 固定工位':''}</span>`}
 /* 在跑窗口列表的行:字段与命令行 running 完全同表(单号/位/员工/开工多久/平台),
    悬停看标题。名册查无该员工时服务端给空列,这里补一个占位——空串在页面上看不出是哪一格缺了。 */
-function runningChip(r){return `<span class="staff on" title="${esc(r.标题||'')}">${esc(r.编号)} · ${esc(r.所属总监位)} · ${esc(r.员工)} · 开工${esc(r.开工多久)} · ${esc(r.平台||'<名册未登记>')}</span>`}
+function runningChip(r){return `<span class="staff on" title="${esc(r.标题||'')}">${esc(r.编号)} · ${esc(r.所属总监位)} · ${esc(r.员工)} · 开工${esc(r.开工多久)} · ${esc(r.平台||'<平台未登记>')}</span>`}
 function runningRow(slot){
   const rows=(app.data?.running||[]).filter(r=>r.所属总监位===slot);
   if(!rows.length)return '';
@@ -388,7 +388,7 @@ function ticketCard(t) {
      在等谁。放行的是所属总监位与总编排,转交过的单 transfer 已经把所属位改成接收位。 */
   const blockedWait=t.类型==='阻塞'&&t.状态==='待答'?` · 等 ${esc(t.所属总监位||CONDUCTOR_SLOT)} 答`:'';
   return `<article class="ticket ${t.状态==='阻塞'?'blocked':''} ${t.状态==='关闭'?'closed':''} ${t.状态==='作废'?'voided':''}" data-ticket="${esc(t.编号)}"><div class="ticket-head"><span class="ticket-id">${esc(t.编号)} · ${esc(t.类型)}</span><span class="ticket-flags"><span class="ticket-state"${stateTitle(t)?` title="${esc(stateTitle(t))}"`:''}>${esc(stateLabel(t))}</span>${shotBlocked}${staleBadge}</span></div>${cross}${internal}${missingTaskbook}<h4>${esc(t.标题)}</h4>
-  <div class="meta">任务档(总监定)：${esc(t.任务档||'待总监定')}${windowHintText(t)}${t.上下文预算!=null?` · 上下文 ${esc(t.上下文预算)} 行`:''} · 实际模型：${esc(t.实际模型||'待开窗写回')} · 经手：${esc(t.指派给||'未指派')} · 判卷：${esc(t.判卷人||'未填')} · 复检：${esc(t.复检人||'未填')}${shotMark(t)}${blockedWait}</div><div class="source">依据：${esc((t.真源指针||[]).join('；')||'未填')}</div><div class="consumer">被谁用：${esc(t.实机消费者||'未填')}</div>
+  <div class="meta">任务档(总监定)：${esc(t.任务档||'待总监定')}${windowHintText(t)}${t.上下文预算!=null?` · 上下文 ${esc(t.上下文预算)} 行`:''} · 实际模型：${esc(t.实际模型||'待开窗写回')}${t.已开窗?.实际平台?` · 平台：${esc(t.已开窗.实际平台)}`:''} · 经手：${esc(t.指派给||'未指派')} · 判卷：${esc(t.判卷人||'未填')} · 复检：${esc(t.复检人||'未填')}${shotMark(t)}${blockedWait}</div><div class="source">依据：${esc((t.真源指针||[]).join('；')||'未填')}</div><div class="consumer">被谁用：${esc(t.实机消费者||'未填')}</div>
   ${t.类型==="派单"?dispatchBox(t):''}
   ${t.判语?`<div class="verdict"><b>判语</b><div>${esc(t.判语)}</div></div>`:''}${(t.仓库卫生&&(t.仓库卫生.命中||[]).length)?`<div class="hygiene-block"><b>交板·仓库卫生(报而不拦)</b>${(t.仓库卫生.命中||[]).map(row=>`<div>${esc(row)} ← git rm --cached ${esc(row)}(原件留 _work 或 art-local)</div>`).join('')}</div>`:''}${(t.交付项||[]).length?`<div class="deliverables"><b>交付项</b>${(t.交付项||[]).map(row=>`<div>${esc(row)}</div>`).join('')}</div>`:''}${transfers?`<div class="transfer-history"><b>转交历史</b><ul>${transfers}</ul></div>`:''}
   ${images.length?`<div class="thumbs">${images.map(img=>`<span><img class="thumb" data-ticket-image="${esc(img.文件名)}" alt="${esc(img.来源标注)}"><small>${esc(img.来源标注)}</small></span>`).join('')}</div>`:''}${actionButtons(t)}</article>`;
@@ -402,7 +402,10 @@ function dispatchInitialPath(t){return String(t.任务书路径||"").trim();}
    任务档是下限不是指定:设计者拿甲档模型跑乙丙的活随意。
    dispatchToolName 保留不删:员工名旁边显示实际模型仍然有用,只是不再进开窗指令。 */
 function dispatchToolName(t){for(const group of Object.values(app.data?.staff?.总监位||{})){const member=(group?.员工||[]).find(m=>m.员工名===t.指派给);if(member)return member["工具/窗类型"]||"<未指派>";}return "<未指派>";}
-function modelRosterText(){return (app.data?.slots?.模型名册||[]).map(row=>`${row.任务档上限||'?'}档 · ${row.模型}${(row.可选档位||[]).length?` ${(row.可选档位||[]).join('/')}`:''}${row.状态&&row.状态!=="可用"?` · ${row.状态}`:''}`).join('\n')||"名册暂空，可自由填写实际模型与档位";}
+/* 员工的平台(需求-023):新记录读「平台」;旧记录没有这一格时,旧「工具/窗类型」若本身就是
+   平台名(claude/codex/vscode/zcode)则借用,否则空——不猜。与服务端 TicketService.staff_platform 同一把尺子。 */
+function platformOf(m){const p=String(m?.平台||'').trim();if(p)return p;const t=String(m?.['工具/窗类型']||'').trim();return WINDOW_PLATFORMS.includes(t)?t:'';}
+function memberFor(worker){for(const group of Object.values(app.data?.staff?.总监位||{})){const member=(group?.员工||[]).find(m=>m.员工名===worker);if(member)return member;}return null;}
 /* 三行文案由服务端 TicketService.dispatch_instructions 生成；前端不再保存第二份模板。 */
 function dispatchLineTexts(t){return Array.isArray(t.开窗指令)?t.开窗指令:[];}
 /* 总监给的开窗平台建议。真源只有一处——派单标题开头的【X】。
@@ -939,8 +942,8 @@ function handoffPrompt(){return prompt("留给下一窗（可不填）：只写�
 function strikePrompt(ticket){const rows=(ticket.留给下一窗||{}).行||[];if(!rows.length)return "";
   return prompt(`执行方留给下一窗这几行；写错的填行号（逗号分隔），没有就留空：\n${rows.map((r,i)=>`${i+1}. ${r.文字}${r.划掉判卷人?`（已被 ${r.划掉判卷人} 划掉）`:''}`).join('\n')}`,"")||""}
 function strictNotice(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给),first=member&&(member.经手工单号列表||[]).length<=1;return first||[TIER_MID,TIER_LOW].includes(ticket.任务档||TIER_MID)?'首检从严:逐行核,自己重跑验证命令':'判卷检查：'}
-async function recordWebRework(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给);if(!member)return;const model=String(ticket.实际模型||member['工具/窗类型']||'未知').toLowerCase();if(model==='待定')return;const staff=app.data.staff,score=(staff.模型记分||={})[model]||((staff.模型记分)[model]={合计:0});score[ticket.所属总监位]=Number(score[ticket.所属总监位]||0)+1;score.合计=Number(score.合计||0)+1;const limits=app.data.slots.停用阈值||{同位:3,全项目:5},bans=staff.模型停用||={全项目:[],按位:{}};(bans.按位[ticket.所属总监位]||=[]);if(score[ticket.所属总监位]>=limits.同位&&!bans.按位[ticket.所属总监位].includes(model))bans.按位[ticket.所属总监位].push(model);if(score.合计>=limits.全项目&&!bans.全项目.includes(model))bans.全项目.push(model);await writeJson(app.handle,'staff.json',staff)}
-function modelStats(){if(app.data.modelStats?.length)return app.data.modelStats;const people={};Object.entries(app.data.staff?.总监位||{}).forEach(([slot,g])=>(g.员工||[]).forEach(m=>people[m.员工名]={slot,model:m['工具/窗类型']}));const stats={};(app.data.log||[]).forEach(e=>{const t=(app.data.items||[]).find(x=>x.编号===e.工单号),p=t&&people[t.指派给],model=String(e.实际模型||t?.实际模型||p?.model||'').toLowerCase();if(!model||model==='待定')return;const r=stats[model]||=( {交板数:0,判过:0,判退:0} );if(e.事件==='submit')r.交板数++;if(e.事件==='judge-pass')r.判过++;if(e.事件==='judge-rework')r.判退++});const bans=app.data.staff?.模型停用||{全项目:[],按位:{}};return Object.entries(stats).map(([模型,r])=>{const n=r.判过+r.判退;return{模型,...r,合格率:n?`${(r.判过*100/n).toFixed(1)}%`:'—',状态:bans.全项目.includes(模型)?'全项目停用':Object.values(bans.按位||{}).some(v=>v.includes(模型))?'本位停用':'可用'}})}
+async function recordWebRework(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给);if(!member)return;const model=String(ticket.实际模型||platformOf(member)||'').toLowerCase();if(!model||model==='待定')return;const staff=app.data.staff,score=(staff.模型记分||={})[model]||((staff.模型记分)[model]={合计:0});score[ticket.所属总监位]=Number(score[ticket.所属总监位]||0)+1;score.合计=Number(score.合计||0)+1;const limits=app.data.slots.停用阈值||{同位:3,全项目:5},bans=staff.模型停用||={全项目:[],按位:{}};(bans.按位[ticket.所属总监位]||=[]);if(score[ticket.所属总监位]>=limits.同位&&!bans.按位[ticket.所属总监位].includes(model))bans.按位[ticket.所属总监位].push(model);if(score.合计>=limits.全项目&&!bans.全项目.includes(model))bans.全项目.push(model);await writeJson(app.handle,'staff.json',staff)}
+function modelStats(){if(app.data.modelStats?.length)return app.data.modelStats;const people={};Object.entries(app.data.staff?.总监位||{}).forEach(([slot,g])=>(g.员工||[]).forEach(m=>people[m.员工名]={slot,model:platformOf(m)}));const stats={};(app.data.log||[]).forEach(e=>{const t=(app.data.items||[]).find(x=>x.编号===e.工单号),p=t&&people[t.指派给];const actual=String(e.实际模型||t?.实际模型||'').toLowerCase(),platform=String(p?.model||'').toLowerCase();const model=actual&&actual!=='待定'?actual:(platform?platform+'-未标':'');if(!model)return;const r=stats[model]||=( {交板数:0,判过:0,判退:0} );if(e.事件==='submit')r.交板数++;if(e.事件==='judge-pass')r.判过++;if(e.事件==='judge-rework')r.判退++});const bans=app.data.staff?.模型停用||{全项目:[],按位:{}};return Object.entries(stats).map(([模型,r])=>{const n=r.判过+r.判退;return{模型,...r,合格率:n?`${(r.判过*100/n).toFixed(1)}%`:'—',状态:bans.全项目.includes(模型)?'全项目停用':Object.values(bans.按位||{}).some(v=>v.includes(模型))?'本位停用':'可用'}})}
 /* 答复与发送对话线都要等服务器往返,设计者反映每次点击要卡至少 10 秒,
    没有反馈就会忍不住再点,而重复提交会真发出两条。
    点下去立刻置灰并倒数 15 秒;失败则马上解禁,好让人重试。
@@ -983,7 +986,7 @@ function markCooldown(button, key){
 }
 async function sendChat(event){event.preventDefault();const cooldownKey=`say:${event.target.dataset.chatSlot}`;startCooldown(cooldownKey);try{const form=event.target,f=new FormData(form),slot=form.dataset.chatSlot,actor=String(f.get('actor')),text=String(f.get('text')).trim(),ref=String(f.get('ref')).trim().toUpperCase(),files=form._pendingFiles||[],pictures=[];for(const file of files){try{const c=await compress(file),uploaded=await api('/api/upload',{method:'POST',body:JSON.stringify({slot,filename:file.name,by:actor,base64:await blobBase64(c.blob)})});pictures.push(uploaded.图片)}catch(error){throw Error(`${file.name} 上传失败：${error.message}`)}}await api('/api/say',{method:'POST',body:JSON.stringify({slot,by:actor,text,ref,images:pictures})});await refresh();notify(`对话已写入本位${pictures.length?`，附 ${pictures.length} 张图`:''}。`,true)}catch(error){clearCooldown(cooldownKey);notify(`已拦下：${error.message}`)}}
 
-function showHistory(name){const member=staffFor(app.slot).find(m=>m.员工名===name),tickets=(member?.经手工单号列表||[]).map(id=>app.data.items.find(t=>t.编号===id)).filter(Boolean);showModal(`<h2>${esc(name)}</h2><p>${esc(member?.["工具/窗类型"]||'')} · ${esc(member?.状态||'')}</p>${tickets.length?`<table class="table"><tr><th>工单</th><th>标题</th><th>状态</th></tr>${tickets.map(t=>`<tr><td>${esc(t.编号)}</td><td>${esc(t.标题)}</td><td>${esc(t.状态)}</td></tr>`).join('')}</table>`:'<p>还没有经手工单。</p>'}`)}
+function showHistory(name){const member=staffFor(app.slot).find(m=>m.员工名===name),tickets=(member?.经手工单号列表||[]).map(id=>app.data.items.find(t=>t.编号===id)).filter(Boolean);showModal(`<h2>${esc(name)}</h2><p>${esc(platformOf(member)||'平台未标')} · ${esc(member?.["工具/窗类型"]||'')} · ${esc(member?.状态||'')}</p>${tickets.length?`<table class="table"><tr><th>工单</th><th>标题</th><th>状态</th></tr>${tickets.map(t=>`<tr><td>${esc(t.编号)}</td><td>${esc(t.标题)}</td><td>${esc(t.状态)}</td></tr>`).join('')}</table>`:'<p>还没有经手工单。</p>'}`)}
 /* 图片打不开时以前是一片空白,什么都不说——设计者 2026-09-04 报「图片无法打开」,
    而库里与磁盘上的字节其实都在、逐字节一致。哑失败比报错难查十倍:
    谁也不知道是没登录、会话过期、还是图真的没了。所以这里永远给两样:
@@ -1064,20 +1067,27 @@ ${t.非玩家可感知
     if(next){
       const before=ticket?.实际模型;
       const current=String(ticket?.实际模型||dispatchToolName(ticket)||"");
-      const chosen=prompt(`请选择本次实际模型与档位（名册仅供对照，允许自由填写）：\n\n${modelRosterText()}`,current==="待定"?"":current);
+      /* 名册「X档 · 模型」对照已随模型名册停用移除(需求-023):实际模型是自由文本,
+         不核名册、不按模型卡档;开什么模型由拍板人开窗时自选。 */
+      const chosen=prompt('请填写本次实际模型（自由文本，仅记录用，不核名册；档是给拍板人分类用，开什么模型由你开窗时自选）：',current==="待定"?"":current);
       if(chosen===null)return;
+      const member=memberFor(String(ticket?.指派给||""));
+      const platformDefault=platformOf(member)||String(ticket?.建议窗口||"");
+      const platformInput=prompt('请选择开窗平台（claude/codex/vscode/zcode，可留空）：',platformDefault);
+      if(platformInput===null)return;
       /* ★不要在这里 await。设计者 2026-09-04 报「点开窗之后越来越卡」:
          原来这一下要先等写请求回来,再 await refresh() 重拉 /api/slots + /api/tickets(409 张单的整包)
          + 13 个 /api/inbox,一共 15 个请求,然后整页重绘——他就干等着。
          改成:先就地把这一张单改好并重绘(他立刻看到卡片挪走),写请求丢进后台队列;
          成功了安静收下,失败了把本机改动退回去并大声报错。 */
       const model=String(chosen).trim();
+      const platform=String(platformInput).trim().toLowerCase();
       lsSet(`deskOpened:${id}`,reworkStamp(ticket));
       if(ticket)ticket.实际模型=model;           // 就地打补丁,不重拉 409 张单
       render();
       queueWrite({
         label:`${id} 登记已开窗`,
-        run:()=>api('/api/action',{method:'POST',body:JSON.stringify({op:'open-window',ticket:id,by:'设计者',actual_model:model})}).then(result=>{
+        run:()=>api('/api/action',{method:'POST',body:JSON.stringify({op:'open-window',ticket:id,by:'设计者',actual_model:model,actual_platform:platform})}).then(result=>{
           const saved=result?.工单,index=(app.data.items||[]).findIndex(row=>row.编号===id);
           if(saved&&index>=0){app.data.items[index]=saved;render()}
           return result;

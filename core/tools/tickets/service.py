@@ -12,11 +12,12 @@ from pathlib import Path
 from typing import Any
 
 from .config import client_view
+from .config import OFFICE_DIR
 from .model import (
     CONDUCTOR_SLOT, DISPATCH_FORBIDDEN_SLOTS, LIVE_ORIGIN, PLATFORM_SLOT, RELAY_SLOT_SCOPE, REVIEW_SLOT, SLOTS,
-    TASK_TIERS, TIER_LOW, TIER_MID, TIER_TOP, TicketError, apply_ticket_placeholder, apply_window_prefix,
-    deliverable_candidate, deliverable_key, image_record, is_image_deliverable, new_ticket_record,
-    normalize_lines, normalize_sources, normalize_window, now_text, path_segments,
+    TASK_TIERS, TIER_LOW, TIER_MID, TIER_TOP, TicketError, WINDOW_PLATFORMS, apply_ticket_placeholder,
+    apply_window_prefix, deliverable_candidate, deliverable_key, image_record, is_image_deliverable,
+    new_ticket_record, normalize_lines, normalize_sources, normalize_window, now_text, path_segments,
     resolve_under_root, with_ticket_defaults,
 )
 from .store import TicketStore
@@ -2436,28 +2437,28 @@ class TicketService:
         )
         return ticket
 
-    def staff_new(self, slot: str, tool: str | None = None) -> dict[str, Any]:
+    def staff_new(self, slot: str, tool: str | None = None, platform: str = "") -> dict[str, Any]:
+        """登记一位执行员工:员工只标平台,--tool 退役为可选自由文本(不校验名册)。
+
+        需求-023(2026-09-30):台面不再按模型卡档——任何模型名(名册外字符串、待定)登记
+        都不弹提醒、不拦;停用闸(staff ban)照旧拦被手工停用的模型名。
+        """
         if slot not in SLOTS:
             raise TicketError(f"总监位不在名册里：{slot}")
-        # 不给就用配置里的第一个主力模型;给了空串照旧拒(那是写错了,不是没写)。
+        # 不给 --tool 就记「待定」;给了空串照旧拒(那是写错了,不是没写)。
         if tool is None:
-            tool = TicketStore.MAIN_MODELS[0] if TicketStore.MAIN_MODELS else ""
+            tool = "待定"
         tool = tool.strip().lower()
         if not tool:
             raise TicketError("模型名不能为空。")
+        platform = str(platform or "").strip().lower()
+        if platform and platform not in WINDOW_PLATFORMS:
+            raise TicketError(
+                f"平台不认识：{platform}。只能填这四个之一，或者留空：{'、'.join(WINDOW_PLATFORMS)}。"
+            )
         accounting_tool = normalize_model_name(tool)
         with self.store.locked():
             staff = self.store.read_json(self.store.staff_path)
-            slots = self.store.read_json(self.store.slots_path)
-            roster = list(slots.get("模型名册") or [])
-            roster_row = next((
-                row for row in sorted(roster, key=lambda item: len(str(item.get("模型", ""))), reverse=True)
-                if accounting_tool == normalize_model_name(row.get("模型"))
-                or accounting_tool.startswith(normalize_model_name(row.get("模型")) + "-")
-            ), {})
-            model_name = normalize_model_name(roster_row.get("模型") or tool)
-            if roster_row.get("状态") == "退役":
-                raise TicketError(f"不能登记：模型 {model_name} 已退役；历史记录保留，但不可再 staff new。")
             self._assert_model_not_banned(staff, accounting_tool, slot)
             group = staff.setdefault("总监位", {}).setdefault(slot, {"下一个编号": 1, "员工": []})
             group.setdefault("下一个编号", 1)
@@ -2472,24 +2473,14 @@ class TicketService:
             # 「固定工位」默认假、「记忆md路径」默认空：绝大多数工位是一次性的，
             # 打标记是 staff fix 的显式动作，不能靠新建时手滑变成默认。
             member = {
-                "编号": number, "员工名": name, "工具/窗类型": tool, "开窗时间": now_text(),
+                "编号": number, "员工名": name, "平台": platform, "工具/窗类型": tool, "开窗时间": now_text(),
                 "状态": "在岗", "经手工单号列表": [], "固定工位": False, "记忆md路径": "",
             }
             group["员工"].append(member)
             group["下一个编号"] = number + 1
             self.store.atomic_json(self.store.staff_path, staff)
-        slot_row = next((row for row in slots.get("总监位", []) if row.get("名字") == slot), {})
-        main_models = list(slots.get("主力模型集合") or TicketStore.MAIN_MODELS)
-        warning = ""
-        if tool != "待定" and slot_row.get("主力模型", False) and model_name not in main_models:
-            warning = (
-                f"提醒：{tool} 不在主力模型名册里。当前主力是 {'、'.join(main_models)}，"
-                f"只有主力能吃{TIER_TOP}档和{TIER_MID}档；{tool} 这一类只吃{TIER_LOW}档——步骤逐条写死、"
-                "上下文预算不超过 2000 行的模板任务书。"
-                f"「{slot}」这一位标着优先用主力，本次仍已登记 {name}；"
-                f"要派{TIER_TOP}档{TIER_MID}档请换主力模型，派{TIER_LOW}档就照{TIER_LOW}档模板发，并由总监首检从严。"
-            )
-        return dict(member, 提示=warning)
+        # 卡档提醒已随名册/主力集合停用(需求-023):提示恒为空串,键保留兼容旧消费方。
+        return dict(member, 提示="")
 
     def _assert_model_not_banned(self, staff: dict[str, Any], model: str, slot: str, action: str = "开窗") -> None:
         """手工停用之后，这一道就是真正拦住模型的闸——两条开窗路径都要过它。
@@ -2519,23 +2510,14 @@ class TicketService:
         到停用线只通知、不自动停（_record_model_rework），停不停由总编排核过责任归属后
         跑这条命令。权限与 staff_unban 对称：只有设计者/总编排能落笔——2026-09-05 工具自动
         停用两次误伤主力模型，一停就是所有位停摆，所以这一步必须是人的动作，且必须留下原因。
-        主力模型（设计者当面定）在此之上再收紧一道：只有设计者能停，
-        总编排署名也拒——主力模型只有往上提算力的余地，不能停用。
+        主力模型保护闸已随「主力模型集合」停用失效(需求-023,总编 09-30 定):停用对象按
+        填进来的模型名**字面**精确匹配,不再有主力例外,变体归并也随之退化。
         """
         model = normalize_model_name(tool)
         if actor not in {"设计者", CONDUCTOR_SLOT}:
             raise TicketError(f"只有设计者或{CONDUCTOR_SLOT}可以停用模型。")
         if not model:
             raise TicketError("模型名不能为空。")
-        slots = self.store.read_json(self.store.slots_path)
-        main_models = {normalize_model_name(value) for value in slots.get("主力模型集合") or TicketStore.MAIN_MODELS}
-        # 变体也算主力:model-a-high / model-a5 归并到 model-a 之后对闸,不许换个写法绕过去。
-        base, _ = self._model_base_name(model, self._roster_base_names(slots))
-        if base in main_models and actor != "设计者":
-            raise TicketError(
-                f"主力模型 {model} 不停用：只有设计者能停主力模型，{CONDUCTOR_SLOT}署名也拒。"
-                "主力模型只有往上提算力的余地，绝对不能停用。"
-            )
         if slot and slot not in SLOTS:
             raise TicketError(f"总监位不在名册里：{slot}")
         reason = str(reason or "").strip()
@@ -3046,6 +3028,21 @@ class TicketService:
             rows = [row for row in rows if row.get("实机图标记", "") == "待独图"]
         return rows
 
+    @staticmethod
+    def staff_platform(member: dict[str, Any] | None) -> str:
+        """员工的平台(需求-023):新记录读「平台」一格,不填记空。
+
+        旧员工记录没有这一格:旧「工具/窗类型」的值若本身就是平台名
+        (claude/codex/vscode/zcode)则借用,否则空——不猜。
+        """
+        if not member:
+            return ""
+        platform = str(member.get("平台", "") or "").strip()
+        if platform:
+            return platform
+        tool = str(member.get("工具/窗类型", "") or "").strip()
+        return tool if tool in WINDOW_PLATFORMS else ""
+
     def running_windows(self, slot: str = "") -> list[dict[str, Any]]:
         """在跑窗口列表的**唯一生成处**：CLI 的 `running` 与网页 /api/running-windows 都只消费它。
 
@@ -3053,12 +3050,12 @@ class TicketService:
         且「指派给」是名册在册员工——转交后指派给变位名/设计者的单摘除,目标位员工认领后回列;
         开工多久按「状态进入时间」算——store 落盘时状态一变就刷新那一格，
         新建→已认领那一刻的时间在语义上就是开工时刻。
-        「平台」取员工名册里该员工条目的「工具/窗类型」（open_window 会把实际模型写回那一格），
+        「平台」取员工名册里该员工条目的「平台」一格(旧记录按 staff_platform 的兜底规则读),
         名册查无此人的给空列，不猜。
         """
         staff = self.store.load_staff()
         tools = {
-            str(member.get("员工名", "")).strip(): str(member.get("工具/窗类型", "") or "")
+            str(member.get("员工名", "")).strip(): self.staff_platform(member)
             for group in (staff.get("总监位") or {}).values()
             for member in (group.get("员工") or [])
         }
@@ -3133,6 +3130,9 @@ class TicketService:
         总编排落号同向(开窗指令回三行,双 shell 段住任务书第 0 步与 README,两头各一条闸)。
         ⇒ **卡片三行是定死的**。谁再想往这里加东西,先拿到推翻的新裁定。
 
+        第三行「在 <办公目录> 下新开线程」(需求-022):目录只取配置的「办公目录」键
+        (config.OFFICE_DIR),这里不写字面值;仍是三行、仍不带平台名。
+
         `staff` 只是名册快照的透传口,不影响这三行的**内容**:
         传与不传返回值逐字相同,由 test_t2413_* 那条等价用例守着。
         """
@@ -3156,9 +3156,9 @@ class TicketService:
         #   建议窗口只写在派单标题开头的【X】那一处，设计者在卡片上就看得见，不必再往指令里塞。
         #   这些行还要原样贴进员工窗给 AI 读，多一个平台名就是诱导它去猜自己跑在哪个窗上。
         return [
-            f"先跑这一条认领:python {CLI_PATH} claim {ticket['编号']} --by {worker}",
+            f"先跑这一条认领:python -X utf8 {CLI_PATH} claim {ticket['编号']} --by {worker}",
             second,
-            f"【操作提示·只给设计者】新开线程,任务档 {tier},模型你定,贴上面那句。",
+            f"【操作提示·只给设计者】在 {OFFICE_DIR} 下新开线程,任务档 {tier},模型你定,贴上面那句。",
         ]
 
     def dispatch_instruction_text(self, ticket: dict[str, Any]) -> str:
@@ -3972,20 +3972,11 @@ class TicketService:
         ticket["实际模型"] = model
         round_number = int(ticket.get("返工次数", 0))
         ticket["已开窗"] = {"轮次": round_number, "时间": now_text(), "实际模型": model, "实际平台": platform}
+        # 「低于本单Y档」提醒已随模型名册停用(需求-023):任务档只是拍板人的分类标签,
+        # 开什么模型由拍板人开窗时自选;「模型低档提醒过」字段保留但恒为 False,不再有写 true 的点。
+        if platform:
+            found[1]["平台"] = platform
         warning = ""
-        capacity = self._model_task_tier(model)
-        ranks = {TIER_LOW: 1, TIER_MID: 2, TIER_TOP: 3}
-        if (
-            capacity in ranks
-            and ticket.get("任务档") in ranks
-            and ranks[capacity] < ranks[str(ticket["任务档"])]
-            and not ticket.get("模型低档提醒过", False)
-        ):
-            warning = (
-                f"提醒：实际模型 {model} 低于本单{ticket['任务档']}档。"
-                "任务档是下限，本次不拦；请留意交付质量。"
-            )
-            ticket["模型低档提醒过"] = True
         self.store.save_staff(staff)
         self.store.save_ticket(
             ticket, "window-opened", actor, f"已开窗·第 {round_number} 轮；实际模型：{model}",
@@ -4072,7 +4063,7 @@ class TicketService:
 
     def model_statistics(self) -> list[dict[str, Any]]:
         staff = self.store.load_staff()
-        people = {member["员工名"]: (slot, member.get("工具/窗类型", "未知")) for slot, group in staff.get("总监位", {}).items() for member in group.get("员工", [])}
+        people = {member["员工名"]: (slot, self.staff_platform(member)) for slot, group in staff.get("总监位", {}).items() for member in group.get("员工", [])}
         stats: dict[tuple[str, str], dict[str, int]] = {}
         tickets = {ticket["编号"]: ticket for ticket in self.store.list_tickets()}
         for event in self.store.read_jsonl(self.store.log_path):
@@ -4160,35 +4151,23 @@ class TicketService:
             self.store.save_staff(staff)
 
     @staticmethod
-    def _accounting_model(actual_model: Any, tool: Any) -> tuple[str, bool]:
+    def _accounting_model(actual_model: Any, platform: Any) -> tuple[str, bool]:
+        """记账模型键(需求-023 候选 A):按单上「实际模型」自由文本;空/待定则按员工平台记 `<平台>-未标`。
+
+        平台也没标(老记录兜底不出平台)就返回空串——调用方一律跳过记账,不猜。
+        """
         actual = normalize_model_name(actual_model)
         if actual and actual != "待定":
             return actual, False
-        fallback = normalize_model_name(tool)
+        fallback = normalize_model_name(platform)
         if not fallback or fallback == "待定":
             return "", False
         return f"{fallback}-未标", True
 
     def _accounting_model_for_ticket(self, ticket: dict[str, Any]) -> tuple[str, bool]:
         found = self.find_staff(ticket.get("指派给", ""))
-        tool = found[1].get("工具/窗类型", "") if found else ""
-        return self._accounting_model(ticket.get("实际模型"), tool)
-
-    @staticmethod
-    def _roster_model_names(slots: dict[str, Any]) -> set[str]:
-        names: set[str] = set()
-        for row in slots.get("模型名册") or []:
-            if isinstance(row, str):
-                base = normalize_model_name(row)
-                levels: list[Any] = []
-            else:
-                base = normalize_model_name(row.get("模型"))
-                levels = list(row.get("可选档位") or [])
-            if not base:
-                continue
-            names.add(base)
-            names.update(f"{base}-{level}" for level in map(normalize_model_name, levels) if level)
-        return names
+        platform = self.staff_platform(found[1]) if found else ""
+        return self._accounting_model(ticket.get("实际模型"), platform)
 
     def _record_question_rework(self, ticket: dict[str, Any]) -> None:
         owner = str(ticket.get("所属总监位") or "未标")
@@ -4227,33 +4206,19 @@ class TicketService:
         return owner
 
     @staticmethod
-    def _roster_base_names(slots: dict[str, Any]) -> list[str]:
-        """名册里的模型基名,长的在前:归并变体时先试更具体的名字(如 model-c-flash 先于 model-c)。"""
-        names: set[str] = set()
-        for row in slots.get("模型名册") or []:
-            base = normalize_model_name(row if isinstance(row, str) else row.get("模型"))
-            if base:
-                names.add(base)
-        return sorted(names, key=len, reverse=True)
+    def _model_base_name(value: str) -> tuple[str, bool]:
+        """把一个记账模型键折成停用线的基名,返回 (基名, 是否未标)。
 
-    @staticmethod
-    def _model_base_name(value: str, base_names: list[str]) -> tuple[str, bool]:
-        """把一个记账模型键归并到名册基名,返回 (基名, 是否未标)。
-
-        model-a / model-a5 / model-a-high / model-a xhigh 一律归并成 model-a;`<工具>-未标`
-        归到工具名下,未标这笔回答调用方要在通知里标出来。照名册前缀匹配,不写死变体表;
-        名册里没有的按字面返回。
+        名册停用(需求-023)后不再照名册前缀归并变体:model-a5 / model-a-high 各按字面
+        自己计数,归并退化即退化;`<平台>-未标` 折回平台名下,未标这笔回答调用方要在通知里标出来。
         """
         normalized = normalize_model_name(value)
         unmarked = normalized.endswith("-未标")
         if unmarked:
             normalized = normalized[: -len("未标")].strip("-")
-        for name in base_names:
-            if normalized.startswith(name):
-                return name, unmarked
         return normalized, unmarked
 
-    def _model_blame_rows(self, ticket: dict[str, Any], base_names: list[str]) -> list[dict[str, Any]]:
+    def _model_blame_rows(self, ticket: dict[str, Any]) -> list[dict[str, Any]]:
         """一张工单里 判退责任=模型 的返工条目,折成停用线的逐笔证据。
 
         出题、空字符串、其他值一律不计;返工次数为 0 的单一条都不贡献。
@@ -4263,7 +4228,7 @@ class TicketService:
         model, _ = self._accounting_model_for_ticket(ticket)
         if not model:
             return []
-        base, unmarked = self._model_base_name(model, base_names)
+        base, unmarked = self._model_base_name(model)
         tier = str(ticket.get("任务档") or "未标") or "未标"
         rows: list[dict[str, Any]] = []
         for entry in ticket.get("返工原因列表") or []:
@@ -4292,8 +4257,6 @@ class TicketService:
         conductor_notices = []
         if actual_missing:
             notices.append(f"这张单没填实际模型，已按 {model} 单独记账。")
-        if model not in self._roster_model_names(slots):
-            notices.append(f"模型名 {model} 不在名册里，已按字面记账。")
         # (总编排答「乙」)/ 2026-09-05 加急:自动写 bans 关掉。
         # 原文是「跨位累计 5 次判退,全项目停用,总编排落笔」——落笔是人的动作,
         # 工具自动写停用是实现时加的,不是宪法要求。曾两次把主力模型全项目停掉,
@@ -4307,14 +4270,13 @@ class TicketService:
         tier = str(ticket.get("任务档") or "未标")
         same_limit = int(limits.get("同位", 3))
         all_limit = int(limits.get("全项目", 5))
-        base_names = self._roster_base_names(slots)
-        base, _ = self._model_base_name(model, base_names)
+        base, _ = self._model_base_name(model)
         rows: list[dict[str, Any]] = []
         for other in self.store.list_tickets():
             if other.get("编号") == ticket.get("编号"):
                 continue  # 本单以内存里的为准:库里还没存上本次刚记的这一笔,漏了就会少数一次
-            rows.extend(self._model_blame_rows(other, base_names))
-        rows.extend(self._model_blame_rows(ticket, base_names))
+            rows.extend(self._model_blame_rows(other))
+        rows.extend(self._model_blame_rows(ticket))
         cell = [row for row in rows if row["基名"] == base and row["任务档"] == tier]
         same_count = sum(1 for row in cell if row["位"] == slot)
         all_count = len(cell)
@@ -4323,48 +4285,26 @@ class TicketService:
         )
         if details:
             details = "计入的每一笔(单号 · 所属位 · 任务档 · 责任字段):\n" + details
-        main_models = {normalize_model_name(value) for value in slots.get("主力模型集合") or TicketStore.MAIN_MODELS}
+        # 主力到线提示分支已随「主力模型集合」停用删除(需求-023):所有模型一条停用线,口径一致。
         head = f"模型 {base}({tier}档)在「{owner}」"
-        if base in main_models:
-            # R1.5,设计者 2026-09-06 原话(全文见 staff_ban):主力模型永不停用,到线也只作质量提示。
-            hint = (
-                f"{head}记模型责任判退 {same_count} 次,跨位 {all_count} 次(本次 {ticket['编号']})。"
-                "主力模型不停用,这条只作质量提示,请核一遍归属是否记对(判错用 set --blame 更正)。"
+        if same_count == same_limit - 1 or all_count == all_limit - 1:
+            notices.append(
+                head + f"累计判退 {same_count} 次,跨位累计 {all_count} 次(本次 {ticket['编号']})"
+                + ";再判退 1 次就到停用线。若其中有出题责任判错了归属,现在用判语首行「出题责任」纠正还来得及。"
+                + ("\n" + details if details else "")
             )
-            if same_count == same_limit - 1 or all_count == all_limit - 1 or same_count >= same_limit or all_count >= all_limit:
-                notices.append(hint + ("\n" + details if details else ""))
-        else:
-            if same_count == same_limit - 1 or all_count == all_limit - 1:
-                notices.append(
-                    head + f"累计判退 {same_count} 次,跨位累计 {all_count} 次(本次 {ticket['编号']})"
-                    + ";再判退 1 次就到停用线。若其中有出题责任判错了归属,现在用判语首行「出题责任」纠正还来得及。"
-                    + ("\n" + details if details else "")
-                )
-            if same_count >= same_limit or all_count >= all_limit:
-                notices.append(
-                    head + f"累计判退 {same_count} 次,跨位累计 {all_count} 次(本次 {ticket['编号']})"
-                    + f";已到停用线。自动停用已关,模型仍算可用;停不停由{CONDUCTOR_SLOT}核过责任归属后拍板。"
-                    + ("\n" + details if details else "")
-                )
+        if same_count >= same_limit or all_count >= all_limit:
+            notices.append(
+                head + f"累计判退 {same_count} 次,跨位累计 {all_count} 次(本次 {ticket['编号']})"
+                + f";已到停用线。自动停用已关,模型仍算可用;停不停由{CONDUCTOR_SLOT}核过责任归属后拍板。"
+                + ("\n" + details if details else "")
+            )
         if notices:
             self._notify_slots((CONDUCTOR_SLOT, owner), str(ticket.get("判卷人") or "工单台"), "\n".join(notices), str(ticket["编号"]))
         self.store.save_staff(staff)
         for text in conductor_notices:
             self._notify_slots((CONDUCTOR_SLOT,), actor or str(ticket.get("判卷人") or slot), text, ticket.get("编号", ""))
         return "\n".join(notices)
-
-    def _model_task_tier(self, actual_model: str) -> str:
-        value = normalize_model_name(actual_model)
-        roster = self.store.read_json(self.store.slots_path).get("模型名册", [])
-        for row in sorted(roster, key=lambda item: len(str(item.get("模型", ""))), reverse=True):
-            name = normalize_model_name(row.get("模型"))
-            if value == name or value.startswith(name + "-"):
-                level = value[len(name):].strip("-").split("-", 1)[0]
-                tier_map = {normalize_model_name(key): tier for key, tier in (row.get("档位任务档") or {}).items()}
-                if level in tier_map:
-                    return str(tier_map[level])
-                return str(row.get("任务档上限", ""))
-        return ""
 
     @staticmethod
     def _render_c_tier_export(ticket: dict[str, Any]) -> str:

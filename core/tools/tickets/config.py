@@ -1,15 +1,15 @@
-"""工单台的项目配置:位表、特殊位、任务档、模型名册、启用的扩展。
+"""工单台的项目配置:位表、特殊位、任务档、停用阈值、启用的扩展、办公目录。
 
-原来这些全写死在代码里(位名在 model.py、模型名册在 store.py、网页里还抄着一份),
+原来这些全写死在代码里(位名在 model.py、旧版模型名册在 store.py、网页里还抄着一份),
 加一位、改一个名字要改好几处,漏一处就是「单发出去了,收件位看不见」。
 现在收进一份 JSON 配置文件:
 
   · 默认读 core/desk_config.json(随仓一起的通用默认);
   · 环境变量 TICKET_DESK_CONFIG 指向另一份**完整**的配置文件时,整份换成那一份(不是叠加);
-  · 读不出来、缺键、写歪一律**当场报错**,不悄悄退回默认值——配置写歪了却按默认名册跑起来,
+  · 读不出来、缺键、写歪一律**当场报错**,不悄悄退回默认值——配置写歪了却按默认位表跑起来,
     是这一类工具最坏的失败形态。
 
-★代码里任何一处要用到位名、特殊位、任务档名、模型名册,都从这里取,不许再写字面量。
+★代码里任何一处要用到位名、特殊位、任务档名,都从这里取,不许再写字面量。
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -34,8 +35,11 @@ ROLE_PLATFORM = "平台"
 ROLES = (ROLE_CONDUCTOR, ROLE_REVIEW, ROLE_PLATFORM)
 # 拍板人是人不是位:对话线与权限闸对这两者的处理完全不同,名字不许与任何位重名。
 OWNER_ROLE = "设计者"
-ROSTER_STATES = ("可用", "需批准", "退役")
-REQUIRED_KEYS = ("位表", "任务档", "主力模型集合", "旧版主力模型集合", "模型名册", "停用阈值", "启用扩展")
+# 需求-023(2026-09-30)起「主力模型集合」「旧版主力模型集合」「模型名册」三键停用:
+# 台面不再按模型卡档,员工与窗口只标平台。带着这三键的老配置**容忍但不读**——
+# 过校验、不报错、也不提示删键;新库(sessions 的 slots.json)不再写它们。
+TOLERATED_KEYS = ("主力模型集合", "旧版主力模型集合", "模型名册")
+REQUIRED_KEYS = ("位表", "任务档", "停用阈值", "启用扩展", "办公目录")
 # 员工名是「位名-两到三位编号」,位名自己不能长成那个样子,否则收敛回位名时会认错人。
 _STAFF_SUFFIX = re.compile(r"-\d+$")
 
@@ -68,8 +72,11 @@ def validate(values: dict[str, Any], path: Path | str = "<配置>") -> None:
     missing = [key for key in REQUIRED_KEYS if key not in values]
     if missing:
         fail(f"缺少这些键:{'、'.join(missing)}。必备键:{'、'.join(REQUIRED_KEYS)}。")
-    # 以下划线开头的键是给人看的说明,程序不读。
-    unknown = sorted(key for key in values if key not in REQUIRED_KEYS and not str(key).startswith("_"))
+    # 以下划线开头的键是给人看的说明,程序不读;三键停用后的老配置键也放行(容忍但不读)。
+    unknown = sorted(
+        key for key in values
+        if key not in REQUIRED_KEYS and key not in TOLERATED_KEYS and not str(key).startswith("_")
+    )
     if unknown:
         fail(f"有不认识的键:{'、'.join(unknown)}。合法键:{'、'.join(REQUIRED_KEYS)}(另可加以 _ 开头的说明键)。")
 
@@ -118,33 +125,8 @@ def validate(values: dict[str, Any], path: Path | str = "<配置>") -> None:
     ):
         fail("「任务档」必须是三个互不相同的非空名字,从高到低排(例如 [\"甲\",\"乙\",\"丙\"])。")
 
-    roster = values["模型名册"]
-    if not isinstance(roster, list):
-        fail("「模型名册」必须是列表。")
-    models: list[str] = []
-    for row in roster:
-        if not isinstance(row, dict) or not str(row.get("模型", "")).strip():
-            fail(f"「模型名册」每一行都必须是带「模型」的对象:{row!r}")
-        model = str(row["模型"]).strip()
-        if str(row.get("任务档上限", "")) not in tiers:
-            fail(f"模型「{model}」的任务档上限必须是任务档之一:{'、'.join(tiers)}。")
-        if str(row.get("状态", "")) not in ROSTER_STATES:
-            fail(f"模型「{model}」的状态只能是:{'、'.join(ROSTER_STATES)}。")
-        if not isinstance(row.get("可选档位", []), list):
-            fail(f"模型「{model}」的「可选档位」必须是列表。")
-        levels = row.get("档位任务档", {})
-        if not isinstance(levels, dict) or any(str(tier) not in tiers for tier in levels.values()):
-            fail(f"模型「{model}」的「档位任务档」的值必须是任务档之一:{'、'.join(tiers)}。")
-        models.append(model)
-    if len(set(models)) != len(models):
-        fail("「模型名册」里有重复的模型名。")
-    for key in ("主力模型集合", "旧版主力模型集合"):
-        group = values[key]
-        if not isinstance(group, list) or any(not isinstance(item, str) for item in group):
-            fail(f"「{key}」必须是字符串列表。")
-    stray = [item for item in values["主力模型集合"] if item not in models]
-    if stray:
-        fail(f"「主力模型集合」里的模型不在「模型名册」里:{'、'.join(stray)}。")
+    # 「主力模型集合」「旧版主力模型集合」「模型名册」三键停用(需求-023):
+    # 键在不在都放行,内容一律不读、不校验——老配置原样带过来不报错,新配置不写它们。
 
     thresholds = values["停用阈值"]
     if (
@@ -158,6 +140,44 @@ def validate(values: dict[str, Any], path: Path | str = "<配置>") -> None:
         not isinstance(name, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name) for name in extensions
     ):
         fail("「启用扩展」必须是扩展目录名的列表(core/extensions/ 下的子目录名,字母数字下划线)。")
+
+    # 办公目录:开窗指令第三行「在 <它> 下新开线程」的那个目录,只在配置这一处写。
+    # ★代码里不给默认值:缺键、空串都当场报错——默认值一写进代码,目录字符串就成了两处。
+    office = values["办公目录"]
+    if not isinstance(office, str) or not office.strip():
+        fail("「办公目录」必须是非空字符串:各窗开窗的那个目录(开窗指令第三行「在 <它> 下新开线程」)。")
+
+
+def add_slot(name: str, *, role: str = "", relay: bool = False, scope: str = "") -> tuple[dict[str, Any], Path]:
+    """只修改配置位表:先校验完整候选配置,再原子替换文件。"""
+    path = config_path().resolve()
+    values = load_config(path)
+    name = name.strip()
+    if any(str(row["名字"]).strip() == name for row in values["位表"]):
+        raise RuntimeError(f"位「{name}」已存在，不能重复添加。")
+    row: dict[str, Any] = {"名字": name}
+    if role:
+        row["角色"] = role.strip()
+    if relay:
+        row["只发需求"] = True
+    if scope.strip():
+        row["对口"] = scope.strip()
+    values["位表"].append(row)
+    validate(values, path)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(values, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+    return row, path
 
 
 PATH: Path = config_path()
@@ -187,15 +207,18 @@ RELAY_SLOT_SCOPE: dict[str, str] = {
 }
 TASK_TIERS: tuple[str, ...] = tuple(str(tier).strip() for tier in _VALUES["任务档"])
 TIER_TOP, TIER_MID, TIER_LOW = TASK_TIERS
-MAIN_MODELS: list[str] = [str(item) for item in _VALUES["主力模型集合"]]
-LEGACY_MAIN_MODELS: list[str] = [str(item) for item in _VALUES["旧版主力模型集合"]]
-MODEL_ROSTER: list[dict[str, Any]] = [dict(row) for row in _VALUES["模型名册"]]
 BAN_THRESHOLDS: dict[str, int] = dict(_VALUES["停用阈值"])
 ENABLED_EXTENSIONS: tuple[str, ...] = tuple(_VALUES["启用扩展"])
 
+# 开窗目录:开窗指令第三行「在 <它> 下新开线程」。★唯一来源是配置的「办公目录」键,代码里不写字面值。
+OFFICE_DIR: str = str(_VALUES["办公目录"]).strip()
+
 
 def client_view() -> dict[str, Any]:
-    """网页要用的那一部分配置:位名、特殊位、任务档、模型名册。与服务端同一份来源,不另抄。"""
+    """网页要用的那一部分配置:位名、特殊位、任务档。与服务端同一份来源,不另抄。
+
+    三键停用(需求-023)后不再向网页下发主力集合与模型名册;前端对缺键一律按空处理。
+    """
     return {
         "位名": list(SLOTS),
         "总编排位": CONDUCTOR_SLOT,
@@ -205,8 +228,6 @@ def client_view() -> dict[str, Any]:
         "对口": dict(RELAY_SLOT_SCOPE),
         "拍板人": OWNER_ROLE,
         "任务档": list(TASK_TIERS),
-        "主力模型集合": list(MAIN_MODELS),
-        "模型名册": [dict(row) for row in MODEL_ROSTER],
         # 网页上给人照抄的命令行:本机这份 ticket.py 的路径(正斜杠,bash 与 PowerShell 都认)。
         "命令行": str(CORE_ROOT / "tools" / "tickets" / "ticket.py").replace("\\", "/"),
     }

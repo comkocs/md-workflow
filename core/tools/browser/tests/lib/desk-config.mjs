@@ -24,8 +24,9 @@ export function loadDeskConfig() {
     对口: Object.fromEntries(relays.map((row) => [row.名字, row.对口])),
     拍板人: "设计者",
     任务档: raw.任务档,
-    主力模型集合: raw.主力模型集合,
-    模型名册: raw.模型名册,
+    /* 三键停用(需求-023)后服务端不再下发这两键;夹具删键后这里兜成空表,别让探针拿到 undefined。 */
+    主力模型集合: raw.主力模型集合 || [],
+    模型名册: raw.模型名册 || [],
     命令行: "ticket.py",
   };
 }

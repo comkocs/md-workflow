@@ -117,10 +117,11 @@ def seed_demo(root: Path) -> list[str]:
     ★全部经 ticket.py 自己的命令播,不手写任何工单数据文件——建单闸、状态机、名册规则一条不绕。
       唯一手写的是三份演示任务书(单的输入文档,放在 <数据目录>/任务书/ 下,不是工单库的一部分)。
     """
-    from tools.tickets.config import MAIN_MODELS, TIER_LOW, TIER_MID, TIER_TOP
+    from tools.tickets.config import TIER_LOW, TIER_MID, TIER_TOP
 
     conductor, first, second = demo_slots()
-    model = MAIN_MODELS[0]
+    # 员工只标平台(需求-023):播种不再依赖主力名册,--tool 走默认「待定」。
+    demo_platforms = {first: "claude", second: "codex"}
     books = root / "任务书"
     books.mkdir(parents=True, exist_ok=True)
 
@@ -144,7 +145,7 @@ def seed_demo(root: Path) -> list[str]:
         return CORE.joinpath(*parts).as_posix()
 
     def hire(slot: str) -> str:
-        return run_cli("staff", "new", "--slot", slot, "--tool", model).splitlines()[0].strip()
+        return run_cli("staff", "new", "--slot", slot, "--platform", demo_platforms.get(slot, "zcode")).splitlines()[0].strip()
 
     first_a, first_b, second_a = hire(first), hire(first), hire(second)
 

@@ -625,6 +625,7 @@ class TicketRequestHandler(SimpleHTTPRequestHandler):
             else:
                 session = self.server.auth.login(username, password) if self.server.auth else ""
             self.server.limiter.clear("login", address)
+            self.server.limiter.clear("401", address)
             self.current_user = username
             self._json(
                 HTTPStatus.OK, {"ok": True, "result": {"用户名": username}},
@@ -702,7 +703,7 @@ class TicketRequestHandler(SimpleHTTPRequestHandler):
         self._html(html)
 
     def _send_desk_config(self) -> None:
-        """网页的位表配置(位名、特殊位、任务档、模型名册):与服务端同一份配置文件,不在网页里另抄。"""
+        """网页的位表配置(位名、特殊位、任务档):与服务端同一份配置文件,不在网页里另抄。"""
         payload = (
             "window.TICKET_DESK_CONFIG = "
             + json.dumps(client_view(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))

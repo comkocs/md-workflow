@@ -35,7 +35,7 @@
        用 document.write 是因为它必须在 tickets.js 之前同步执行完(tickets.js 末尾就 refresh()),
        动态插入的 script 挡不住已经排在解析队列里的 tickets.js。 -->
   <script>if(location.protocol==='file:')document.write('<script src="data/tickets-bundle.js"><\/script>');</script>
-  <!-- desk-config.js 由服务端按配置文件现生成(位名、特殊位、任务档、模型名册),必须在 tickets.js 之前同步载入;
+  <!-- desk-config.js 由服务端按配置文件现生成(位名、特殊位、任务档),必须在 tickets.js 之前同步载入;
        file:// 下没有它,tickets.js 改从离线整包里取同一份。 -->
   <script>if(location.protocol!=='file:')document.write('<script src="desk-config.js"><\/script>');</script>
   <script src="tickets.js"></script>
