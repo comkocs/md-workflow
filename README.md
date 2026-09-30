@@ -1,4 +1,4 @@
-# md-workflow · 多 agent 工作流
+# md-workflow · 多 agent 工作流 · 独立 skill
 
 md-workflow · 人在环上的多 agent 工作流:记忆与接管是内核、工单台是通道、闸口是可裁剪配置。
 
@@ -38,23 +38,23 @@ python core/start.py --demo          # 演示台面 → 浏览器开 http://127.
 
 演示台面首次起会播种一个总编、两位总监、三张不同状态的单;Ctrl+C 停,端口被占加 `--port <别的数>`。从空目录完整走一张单(建需求 → 派 0 号 → 施工自并 → 顶级审计 → settle),照 [examples/README.md](examples/README.md) 做,约 30 分钟。
 
-## 只想要 skill?
+## 独立的 skill
 
 不用整套流程,下面这些 skill 也能单独装。
 
-| 英文名 | 它是干什么的 |
-| --- | --- |
-| `merge-and-deploy` | 代码改完、要合进公共主线并放到线上时,用这个 skill 按固定顺序一步步做。 |
-| `contract-and-test-infra` | 后端做完要交给前端、或者对接比预想慢很多时,用这个 skill 先把接口约定和测试底子补齐。 |
-| `closeout-report-drafting` | 这个 skill 帮你在一件活做完时写出一份短、能逐条核对的收口报告。 |
-| `window-handoff-drafting` | 这个 skill 帮你在旧窗口快写满或收工时,给接手的新窗口写一份交接文件。 |
-| `top-audit-dispatch` | 这个 skill 帮你在一单做完并进主线后,派一个独立的审计者按需求逐条核对实际做出来的东西。 |
-| `memory-writing` | 这个 skill 帮你把一条下次还会用到的规矩或教训写成一份单独的记忆,并在记忆索引里加一行,让以后新开的窗一眼能找到。 |
-| `verify-agent-claims` | 这个 skill 帮你在子代理或别人报来「没有」「已经做好」「会出错」这类结论时,先核清再采信。 |
-| `shared-checkout-safety` | 这个 skill 帮你在多个窗口同时在同一份代码上干活时不互相踩。 |
-| `subagent-delegation` | 这个 skill 帮你在把活分给子代理时定好每件活交哪一档模型、怎么切、回报怎么收。 |
-| `engineering-pitfalls-checklist` | 文件开头被悄悄多了看不见的字节、子代理报的内容和远端对不上、部署前检查报版本不一致、命令输出乱码或被吞、测试时过时不过时,用这个 skill 先跑一条对应的检查再下结论。 |
-| `frontend-integration-preflight` | 前端准备接某个后端模块、还没动手对接时,用这个 skill 先核三样东西在不在:接口约定齐不齐,卡住的状态能不能复位回起点,不连真服务器能不能走到要做的界面。 |
+| 英文名 | 中文名 | 它是干什么的 |
+| --- | --- | --- |
+| `merge-and-deploy` | 并线上服 | 代码改完、要合进公共主线并放到线上时,用这个 skill 按固定顺序一步步做。 |
+| `contract-and-test-infra` | 前后端契约与测试基建 | 后端做完要交给前端、或者对接比预想慢很多时,用这个 skill 先把接口约定和测试底子补齐。 |
+| `closeout-report-drafting` | 收口报告起草 | 这个 skill 帮你在一件活做完时写出一份短、能逐条核对的收口报告。 |
+| `window-handoff-drafting` | 换窗归档起草 | 这个 skill 帮你在旧窗口快写满或收工时,给接手的新窗口写一份交接文件。 |
+| `top-audit-dispatch` | 顶级审计派遣 | 这个 skill 帮你在一单做完并进主线后,派一个独立的审计者按需求逐条核对实际做出来的东西。 |
+| `memory-writing` | 记忆写入与索引 | 这个 skill 帮你把一条下次还会用到的规矩或教训写成一份单独的记忆,并在记忆索引里加一行,让以后新开的窗一眼能找到。 |
+| `verify-agent-claims` | 核子代理与他人报告 | 这个 skill 帮你在子代理或别人报来「没有」「已经做好」「会出错」这类结论时,先核清再采信。 |
+| `shared-checkout-safety` | 共用检出与工作树 | 这个 skill 帮你在多个窗口同时在同一份代码上干活时不互相踩。 |
+| `subagent-delegation` | 子代理分档与回报 | 这个 skill 帮你在把活分给子代理时定好每件活交哪一档模型、怎么切、回报怎么收。 |
+| `engineering-pitfalls-checklist` | 工程坑清单 | 文件开头被悄悄多了看不见的字节、子代理报的内容和远端对不上、部署前检查报版本不一致、命令输出乱码或被吞、测试时过时不过时,用这个 skill 先跑一条对应的检查再下结论。 |
+| `frontend-integration-preflight` | 前端对接预检 | 前端准备接某个后端模块、还没动手对接时,用这个 skill 先核三样东西在不在:接口约定齐不齐,卡住的状态能不能复位回起点,不连真服务器能不能走到要做的界面。 |
 
 安装:用通用 skill 安装器(如 `npx skills add https://github.com/comkocs/md-workflow`)装进项目,或把 `.agents/skills/<英文名>/` 整个目录拷到你项目的 `.agents/skills/` 下。
 
