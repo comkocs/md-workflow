@@ -10,7 +10,7 @@
 
 1. 时机:做完一次提交、一次部署、或判出一条新口径,当场问「这次有没有下次会重踩的」;有就现在写,不攒到收窗。细节见 `references/memory-spec-section-6.md` 的「§6 写入、更新、删除纪律」第 2 条。
 2. 只写下次会重踩的那一条;代码结构、提交历史、单号进展这类仓里现查得到的不进记忆。细节同上第 3 条。
-3. 分清载体:跨窗复用的规矩、教训、指针进记忆目录;本位现状与下一步写接管件,一张单做到哪写交接件,都放办公仓,记忆里只留 ≤1KB 的指针。细节见 `references/memory-spec-sections-1-4.md` 的「§1 记忆放在哪」与 `references/memory-spec-section-6.md` 第 7 条。
+3. 分清载体:跨窗复用的规矩、教训、指针进记忆目录;本位现状与下窗待办写现状件(`接管_现状.md`),一张单做到哪写交接件,都放办公仓,记忆里只留 ≤1KB 的指针。细节见 `references/memory-spec-sections-1-4.md` 的「§1 记忆放在哪」与 `references/memory-spec-section-6.md` 第 7 条。
 4. 先查同题:在记忆目录里搜两三个关键词,有同题就改那一份,不另起一份。细节见 `references/memory-spec-section-6.md` 第 1 条。
 5. 「X 读不到」「Y 从来不行」这类否定式断言,写进去前先实测一次;引用时当场再验。细节见 `references/memory-spec-section-6.md` 第 5 条。
 

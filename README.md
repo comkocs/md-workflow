@@ -15,7 +15,7 @@ md-workflow · 人在环上的多 agent 工作流:记忆与接管是内核、工
 
 ## 作者亲笔
 
-这个项目诞生于一次失败。8月25日，我写下第一行代码。一个月，60多万行有效C#代码，游戏完整运行，每天都在不断更新中，目前md-workflow项目已经迭代了4个版本了。
+这个项目诞生于一次失败。8月25日，我写下第一行代码。一个月，60多万行有效C#代码，游戏完整运行，每天都在不断更新中，目前md-workflow项目已经迭代到 v1.1 了。
 
 
 ## md-first 后继
@@ -64,6 +64,7 @@ python core/start.py --demo          # 演示台面 → 浏览器开 http://127.
 | 某项目主仓 | 十万行级 | 万行级 |
 | 引擎仓 | 十万行级 | 万行级 |
 | 合计 | 十万行级 | 十万行级 |
+- 指针核对(只读、退出码恒 0):python -X utf8 core/tools/check_pointers.py --out <输出目录> [--baseline <上次跑例目录>]
 
 增删量与树上净量分开统计，结果可由固定提交和配置复现
 这套流程先用在它自己身上:[案例二:工单台自己](examples/案例二_工单台自己.md)
@@ -72,7 +73,7 @@ python core/start.py --demo          # 演示台面 → 浏览器开 http://127.
 
 一个人拍板、一群 AI 窗口干活时用的一套 md 文件,外加一个工单台。三层:
 
-- **内核:记忆与接管。** 每一位(总编、模块总监、平台位)的全部记忆就是 `_office/<位名>/章程.md`;窗口一次性,做完或上下文用到八成就写换窗件收窗,下一窗贴同一句激活句接棒。跨位通用的规矩放在记忆种子 `desk/memory/种子/`,格式真源是 `desk/memory/规范.md`。
+- **内核:记忆与接管。** 每一位(总编、模块总监、平台位)一份四节章程 `_office/<位名>/章程.md`(现行声明:本位管什么 / 真源表 / 开窗步骤 / 规矩只引号,按字节量不超过 6,144)加一份固定名现状件 `_office/<位名>/接管_现状.md`;窗口一次性,做完或上下文用到八成就整段重写现状件收窗,下一窗贴同一句激活句(指向本位章程)接棒;旧件整件挪进 `_office/<位名>/资料/归档_<日期>/`,流水只追加到归档件。跨位通用的规矩放在记忆种子 `desk/memory/种子/`,格式真源是 `desk/memory/规范.md`。
 - **通道:工单台。** 派单、交板、拍板、疑问都进工单台(`core/`,纯 Python 标准库),聊天里说的不算凭据;网页台面与命令行 `core/t.py` 读写同一份数据。
 - **配置:闸口。** `desk/宪法.md` 共 37 道闸,①核心 28 道不可关,②可选 9 道经拍板人拍板后可在开关表里关掉;每道闸都写明拦什么、被拦后怎么走、什么条件可拆。
 
@@ -100,7 +101,7 @@ python core/start.py --demo          # 演示台面 → 浏览器开 http://127.
 | 任务书 | 系统提示 | `desk/模板/0号任务书模板.md`;0 号窗开窗只贴一句「执行 <任务书路径> 的全部指令……」,不另加提示词 |
 | 工单台 | 队列 + 状态机 | `core/t.py` 的 `new` / `claim` / `submit` / `settle` / `live` / `close`;`python core/start.py` 起网页台面 |
 | 审计 | 评估器 | `desk/角色/顶级审计子代理提示词.md`:独立起、只看实物,审计件首行 `幻觉 N / 笔误 N / 漏做 N / 未核 N / 环境限制 N` |
-| 换窗归档 | 上下文接力 | 换窗三件套(总编换窗归档 / 总监接管件 / 0 号交接件),格式见 `desk/memory/规范.md`,模板在 `desk/memory/模板/`;下一窗贴同一句激活句接棒 |
+| 换窗接管 | 上下文接力 | 总编、总监、平台位各一份覆盖式现状件 `接管_现状.md`(§一 现状 / §二 指针),0 号单做不完才写交接件;格式与模板见 `.agents/skills/window-handoff-drafting/`(`desk/memory/模板/` 留链接件);下一窗贴同一句激活句(指向本位章程)接棒 |
 | 记忆种子 | 长期记忆 | `desk/memory/种子/` 7 份共 165 条;记忆索引超 24,000 字符用 `desk/memory/fold_index.py` 整节折成二级入口 |
 | 0 号 | orchestrator / worker | `desk/角色/0号包干窗.md`:0 号只验收、派单与沟通,施工全走子代理(闸 35) |
 | 三档模型 | 路由 | `desk/模板/0号任务书模板.md` §1.1:主力模型写代码、精准模型扫盘读文本、轻量模型扫大目录;台面不按模型卡档,开什么模型由拍板人开窗时自选 |
@@ -131,21 +132,21 @@ PowerShell 写法:`function T { python <仓根>/core/t.py @args }`,之后用 `T 
 **位名与员工名怎么填**
 
 - 位名 = `core/desk_config.json`「位表」里每行的「名字」,默认 前端 / 后端 / 内容 / 复检 / 平台 / 需求分发 / 总编;「角色」为总编排的那一位就是总编。
-- 员工名 = `$T staff new --slot <位名> --platform <平台>` 回显的名字(形如 `后端-01`);`--platform` 填 claude / codex / vscode / zcode 之一或留空,员工与窗口只标平台;`--tool` 是可选自由文本,仅记录这扇窗实际跑的模型,不核名册、不卡档。
+- 员工名 = `$T staff new --slot <位名> --platform <平台>` 回显的名字(形如 `订单-01`);`--platform` 填 claude / codex / vscode / zcode 之一或留空,员工与窗口只标平台;`--tool` 是可选自由文本,仅记录这扇窗实际跑的模型,不核名册、不卡档。
 - `--by` 填谁:总监的动作(建单、指派、免判卷、关单)填位名;员工的动作(认领、settle)填员工名;内部单的 `live` 由总编署名。
 
 **一张单走全程**(新台面上跑,单号以 `new` 的回显为准;`--main-commit` 换成真的合并提交号):
 
 ```bash
-$T staff new --slot 后端 --platform codex
-$T new --slot 后端 --title "README 补一节" --internal --tier 乙 --deliverable README.md --consumer "读仓根 README 的人" --source "需求-001" --by 后端
-$T set T-000001 --assign 后端-01 --by 后端
-$T claim T-000001 --by 后端-01
+$T staff new --slot 订单 --platform codex
+$T new --slot 订单 --title "README 补一节" --internal --tier 乙 --deliverable README.md --consumer "读仓根 README 的人" --source "需求-001" --by 订单
+$T set T-000001 --assign 订单-01 --by 订单
+$T claim T-000001 --by 订单-01
 $T submit T-000001 --evidence "README 已补一节" --verify-command "grep -c '^## 起工单台' README.md" --raw-output "1"
-$T set T-000001 --exempt-judging 是 --by 后端
-$T settle T-000001 --by 后端-01 --fact "示例:已并进主干" --main-commit 1a2b3c4
+$T set T-000001 --exempt-judging 是 --by 订单
+$T settle T-000001 --by 订单-01 --fact "示例:已并进主干" --main-commit 1a2b3c4
 $T live T-000001 --by 总编 --shot 同图
-$T close T-000001 --by 后端
+$T close T-000001 --by 订单
 $T list --state 关闭
 ```
 
