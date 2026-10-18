@@ -1,0 +1,1078 @@
+{
+  "summary": {
+    "id": "demo-session",
+    "title": "DEMO-001 运行看板前端",
+    "alias": "前端看板施工",
+    "note": "本地脱敏样例，不代表真实执行记录。",
+    "platform": "VS Code",
+    "version": "2.1.0",
+    "start": "10-15 13:00",
+    "end": "10-15 15:55",
+    "minutes": 175,
+    "running": true,
+    "main_model": "claude-opus-4-6",
+    "agents": 18,
+    "peak_ctx": 520000,
+    "usd_paid": 9.25,
+    "usd_ref": 15.61,
+    "tokens_sub": 12063030,
+    "alerts": 8
+  },
+  "agents": [
+    {
+      "id": "main",
+      "parent": null,
+      "depth": 0,
+      "type": "主窗",
+      "title": "DEMO-001 运行看板前端",
+      "models": [
+        "claude-opus-4-6"
+      ],
+      "start": "10-15 13:00",
+      "end": "10-15 15:55",
+      "minutes": 175,
+      "turns": 32,
+      "input": 14000,
+      "output": 7000,
+      "cache_read": 480000,
+      "cache_write": 72000,
+      "tool_calls": 12,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 70000,
+      "running": true,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.94,
+      "usd_paid": 0.94,
+      "hit_rate": 0.97165991902834,
+      "last_ctx": 59500,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-01",
+      "parent": "main",
+      "depth": 1,
+      "type": "施工员",
+      "title": "《opus》接口核对",
+      "models": [
+        "claude-opus-4-6"
+      ],
+      "start": "10-15 13:08",
+      "end": "10-15 14:45",
+      "minutes": 97,
+      "turns": 35,
+      "input": 16030,
+      "output": 7870,
+      "cache_read": 569000,
+      "cache_write": 75400,
+      "tool_calls": 14,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 79200,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 1.03,
+      "usd_paid": 1.03,
+      "hit_rate": 0.9725996957420987,
+      "last_ctx": 67320,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-02",
+      "parent": "main",
+      "depth": 1,
+      "type": "扫盘员",
+      "title": "《astra》模型计费核查",
+      "models": [
+        "gpt-6-astra"
+      ],
+      "start": "10-15 13:11",
+      "end": "10-15 14:45",
+      "minutes": 94,
+      "turns": 38,
+      "input": 18060,
+      "output": 8740,
+      "cache_read": 658000,
+      "cache_write": 78800,
+      "tool_calls": 16,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 520000,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.54,
+      "usd_paid": 0,
+      "hit_rate": 0.9732863946986954,
+      "last_ctx": 510000,
+      "ctx_level": "severe"
+    },
+    {
+      "id": "agent-03",
+      "parent": "main",
+      "depth": 1,
+      "type": "审计员",
+      "title": "《sol》前端组件施工",
+      "models": [
+        "gpt-6.1-sol"
+      ],
+      "start": "10-15 13:14",
+      "end": "10-15 15:55",
+      "minutes": 161,
+      "turns": 41,
+      "input": 20090,
+      "output": 9610,
+      "cache_read": 747000,
+      "cache_write": 82200,
+      "tool_calls": 18,
+      "builds": 1,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 450000,
+      "running": true,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.44,
+      "usd_paid": 0,
+      "hit_rate": 0.9738101135459986,
+      "last_ctx": 450000,
+      "ctx_level": "warn"
+    },
+    {
+      "id": "agent-04",
+      "parent": "main",
+      "depth": 1,
+      "type": "施工员",
+      "title": "《opus》DEMO-001 数据归组",
+      "models": [
+        "glm-5.3"
+      ],
+      "start": "10-15 13:17",
+      "end": "10-15 14:45",
+      "minutes": 88,
+      "turns": 44,
+      "input": 22120,
+      "output": 10480,
+      "cache_read": 836000,
+      "cache_write": 85600,
+      "tool_calls": 20,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 106800,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.31,
+      "usd_paid": 0,
+      "hit_rate": 0.9742227194331795,
+      "last_ctx": 90780,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-05",
+      "parent": "main",
+      "depth": 1,
+      "type": "扫盘员",
+      "title": "《dsflash》字段扫盘",
+      "models": [
+        "deepseek-flash"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 14:45",
+      "minutes": 85,
+      "turns": 47,
+      "input": 24150,
+      "output": 11350,
+      "cache_read": 925000,
+      "cache_write": 89000,
+      "tool_calls": 22,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 1,
+      "peak_ctx": 116000,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.06,
+      "usd_paid": 0.06,
+      "hit_rate": 0.9745561818469156,
+      "last_ctx": 98600,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-06",
+      "parent": "agent-01",
+      "depth": 2,
+      "type": "审计员",
+      "title": "《sonnet》窗口列表",
+      "models": [
+        "claude-sonnet-4-6"
+      ],
+      "start": "10-15 13:14",
+      "end": "10-15 14:36",
+      "minutes": 82,
+      "turns": 50,
+      "input": 26180,
+      "output": 12220,
+      "cache_read": 1014000,
+      "cache_write": 92400,
+      "tool_calls": 24,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 295000,
+      "running": false,
+      "gaps": [
+        {
+          "at": "10-15 13:34",
+          "seconds": 425,
+          "cache_write": 46000
+        }
+      ],
+      "long_calls": [],
+      "usd_ref": 0.91,
+      "usd_paid": 0.91,
+      "hit_rate": 0.9748312792016767,
+      "last_ctx": 295000,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-07",
+      "parent": "agent-01",
+      "depth": 2,
+      "type": "施工员",
+      "title": "《haiku》备注校核",
+      "models": [
+        "claude-haiku-4-5"
+      ],
+      "start": "10-15 13:14",
+      "end": "10-15 14:33",
+      "minutes": 79,
+      "turns": 53,
+      "input": 28210,
+      "output": 13090,
+      "cache_read": 1103000,
+      "cache_write": 95800,
+      "tool_calls": 26,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 134400,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.32,
+      "usd_paid": 0.32,
+      "hit_rate": 0.975062101643373,
+      "last_ctx": 8700,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-08",
+      "parent": "agent-03",
+      "depth": 2,
+      "type": "扫盘员",
+      "title": "《sol》树与时间轴",
+      "models": [
+        "gpt-6.1-sol"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 15:55",
+      "minutes": 155,
+      "turns": 56,
+      "input": 30240,
+      "output": 13960,
+      "cache_read": 1192000,
+      "cache_write": 99200,
+      "tool_calls": 28,
+      "builds": 1,
+      "tests": 1,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 143600,
+      "running": true,
+      "gaps": [],
+      "long_calls": [
+        {
+          "at": "10-15 13:32",
+          "seconds": 276,
+          "tool": "Bash",
+          "cmd": "dotnet build 工具界面.csproj（样例，未后台执行）"
+        }
+      ],
+      "usd_ref": 0.63,
+      "usd_paid": 0,
+      "hit_rate": 0.975258541693939,
+      "last_ctx": 122060,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-09",
+      "parent": "agent-02",
+      "depth": 2,
+      "type": "审计员",
+      "title": "《astra》缓存命中复核",
+      "models": [
+        "gpt-6-astra"
+      ],
+      "start": "10-15 13:17",
+      "end": "10-15 14:30",
+      "minutes": 73,
+      "turns": 59,
+      "input": 320000,
+      "output": 14830,
+      "cache_read": 180000,
+      "cache_write": 102600,
+      "tool_calls": 30,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 152800,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 1.32,
+      "usd_paid": 0,
+      "hit_rate": 0.36,
+      "last_ctx": 129880,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-10",
+      "parent": "agent-04",
+      "depth": 2,
+      "type": "general-purpose",
+      "title": "《glm》报警文案",
+      "models": [
+        "glm-5.3"
+      ],
+      "start": "10-15 13:23",
+      "end": "10-15 14:33",
+      "minutes": 70,
+      "turns": 62,
+      "input": 34300,
+      "output": 15700,
+      "cache_read": 1370000,
+      "cache_write": 106000,
+      "tool_calls": 32,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 162000,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.46,
+      "usd_paid": 0,
+      "hit_rate": 0.9755750195827102,
+      "last_ctx": 137700,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-11",
+      "parent": "agent-06",
+      "depth": 3,
+      "type": "扫盘员",
+      "title": "《sonnet》无障碍交互",
+      "models": [
+        "claude-sonnet-4-6"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 14:27",
+      "minutes": 67,
+      "turns": 65,
+      "input": 36330,
+      "output": 16570,
+      "cache_read": 1459000,
+      "cache_write": 109400,
+      "tool_calls": 34,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 171200,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 1.21,
+      "usd_paid": 1.21,
+      "hit_rate": 0.9757043595728033,
+      "last_ctx": 145520,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-12",
+      "parent": "agent-08",
+      "depth": 3,
+      "type": "审计员",
+      "title": "《dsflash》静态资源检查",
+      "models": [
+        "deepseek-flash"
+      ],
+      "start": "10-15 13:26",
+      "end": "10-15 14:30",
+      "minutes": 64,
+      "turns": 68,
+      "input": 38360,
+      "output": 17440,
+      "cache_read": 1548000,
+      "cache_write": 112800,
+      "tool_calls": 36,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 1,
+      "api_errors": 0,
+      "peak_ctx": 180400,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.09,
+      "usd_paid": 0.09,
+      "hit_rate": 0.9758188557452281,
+      "last_ctx": 153340,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-13",
+      "parent": "agent-07",
+      "depth": 3,
+      "type": "施工员",
+      "title": "《haiku》运行状态整理",
+      "models": [
+        "claude-haiku-4-5"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 14:21",
+      "minutes": 61,
+      "turns": 71,
+      "input": 40390,
+      "output": 18310,
+      "cache_read": 1637000,
+      "cache_write": 116200,
+      "tool_calls": 38,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 189600,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.44,
+      "usd_paid": 0.44,
+      "hit_rate": 0.9759209247700297,
+      "last_ctx": 161160,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-14",
+      "parent": "agent-03",
+      "depth": 2,
+      "type": "扫盘员",
+      "title": "《sol》工单表接线",
+      "models": [
+        "gpt-6.1-sol"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 15:55",
+      "minutes": 155,
+      "turns": 74,
+      "input": 42420,
+      "output": 19180,
+      "cache_read": 1726000,
+      "cache_write": 119600,
+      "tool_calls": 40,
+      "builds": 1,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 198800,
+      "running": true,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.85,
+      "usd_paid": 0,
+      "hit_rate": 0.9760124857217177,
+      "last_ctx": 168980,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-15",
+      "parent": "agent-04",
+      "depth": 2,
+      "type": "审计员",
+      "title": "《glm》层级归属",
+      "models": [
+        "glm-5.3"
+      ],
+      "start": "10-15 13:23",
+      "end": "10-15 14:18",
+      "minutes": 55,
+      "turns": 77,
+      "input": 44450,
+      "output": 20050,
+      "cache_read": 1815000,
+      "cache_write": 123000,
+      "tool_calls": 42,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 208000,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 0.59,
+      "usd_paid": 0,
+      "hit_rate": 0.9760950818790503,
+      "last_ctx": 176800,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-16",
+      "parent": "agent-02",
+      "depth": 2,
+      "type": "施工员",
+      "title": "《astra》模型曲线",
+      "models": [
+        "gpt-6-astra"
+      ],
+      "start": "10-15 13:17",
+      "end": "10-15 14:09",
+      "minutes": 52,
+      "turns": 80,
+      "input": 46480,
+      "output": 20920,
+      "cache_read": 1904000,
+      "cache_write": 126400,
+      "tool_calls": 44,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 217200,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 1.22,
+      "usd_paid": 0,
+      "hit_rate": 0.9761699684180304,
+      "last_ctx": 184620,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-17",
+      "parent": "agent-06",
+      "depth": 3,
+      "type": "扫盘员",
+      "title": "《sonnet》表格排序复核",
+      "models": [
+        "claude-sonnet-4-6"
+      ],
+      "start": "10-15 13:20",
+      "end": "10-15 14:09",
+      "minutes": 49,
+      "turns": 83,
+      "input": 48510,
+      "output": 21790,
+      "cache_read": 1993000,
+      "cache_write": 129800,
+      "tool_calls": 46,
+      "builds": 0,
+      "tests": 1,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 226400,
+      "running": false,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 1.56,
+      "usd_paid": 1.56,
+      "hit_rate": 0.9762381766437588,
+      "last_ctx": 192440,
+      "ctx_level": "ok"
+    },
+    {
+      "id": "agent-18",
+      "parent": "main",
+      "depth": 1,
+      "type": "审计员",
+      "title": "《opus》交付复核",
+      "models": [
+        "claude-opus-4-6"
+      ],
+      "start": "10-15 13:59",
+      "end": "10-15 15:55",
+      "minutes": 116,
+      "turns": 86,
+      "input": 50540,
+      "output": 22660,
+      "cache_read": 2082000,
+      "cache_write": 133200,
+      "tool_calls": 48,
+      "builds": 0,
+      "tests": 0,
+      "launches": 0,
+      "kill_by_name": 0,
+      "api_errors": 0,
+      "peak_ctx": 235600,
+      "running": true,
+      "gaps": [],
+      "long_calls": [],
+      "usd_ref": 2.69,
+      "usd_paid": 2.69,
+      "hit_rate": 0.9763005617714088,
+      "last_ctx": 200260,
+      "ctx_level": "ok"
+    }
+  ],
+  "by_model": [
+    {
+      "model": "claude-opus-4-6",
+      "agents": 3,
+      "turns": 153,
+      "input": 80570,
+      "output": 37530,
+      "cache_read": 3131000,
+      "cache_write": 280600,
+      "usd_paid": 4.66,
+      "usd_ref": 4.66,
+      "hit_rate": 0.9749125816968025,
+      "billing": "metered"
+    },
+    {
+      "model": "gpt-6-astra",
+      "agents": 3,
+      "turns": 177,
+      "input": 384540,
+      "output": 44490,
+      "cache_read": 2742000,
+      "cache_write": 307800,
+      "usd_paid": 0,
+      "usd_ref": 3.08,
+      "hit_rate": 0.8770078105509604,
+      "billing": "subscription"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "agents": 3,
+      "turns": 171,
+      "input": 92750,
+      "output": 42750,
+      "cache_read": 3665000,
+      "cache_write": 301000,
+      "usd_paid": 0,
+      "usd_ref": 1.92,
+      "hit_rate": 0.9753176768012773,
+      "billing": "subscription"
+    },
+    {
+      "model": "glm-5.3",
+      "agents": 3,
+      "turns": 183,
+      "input": 100870,
+      "output": 46230,
+      "cache_read": 4021000,
+      "cache_write": 314600,
+      "usd_paid": 0,
+      "usd_ref": 1.36,
+      "hit_rate": 0.9755280976838183,
+      "billing": "subscription"
+    },
+    {
+      "model": "deepseek-flash",
+      "agents": 2,
+      "turns": 115,
+      "input": 62510,
+      "output": 28790,
+      "cache_read": 2473000,
+      "cache_write": 201800,
+      "usd_paid": 0.15,
+      "usd_ref": 0.15,
+      "hit_rate": 0.9753461828192356,
+      "billing": "metered"
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "agents": 3,
+      "turns": 198,
+      "input": 111020,
+      "output": 50580,
+      "cache_read": 4466000,
+      "cache_write": 331600,
+      "usd_paid": 3.68,
+      "usd_ref": 3.68,
+      "hit_rate": 0.9757440430673233,
+      "billing": "metered"
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "agents": 2,
+      "turns": 124,
+      "input": 68600,
+      "output": 31400,
+      "cache_read": 2740000,
+      "cache_write": 212000,
+      "usd_paid": 0.76,
+      "usd_ref": 0.76,
+      "hit_rate": 0.9755750195827102,
+      "billing": "metered"
+    }
+  ],
+  "by_depth": [
+    {
+      "depth": 0,
+      "agents": 1,
+      "turns": 32,
+      "input": 14000,
+      "output": 7000,
+      "cache_read": 480000,
+      "cache_write": 72000,
+      "usd_paid": 0.94,
+      "usd_ref": 0.94,
+      "hit_rate": 0.97165991902834
+    },
+    {
+      "depth": 1,
+      "agents": 6,
+      "turns": 291,
+      "input": 150990,
+      "output": 70710,
+      "cache_read": 5817000,
+      "cache_write": 544200,
+      "usd_paid": 3.78,
+      "usd_ref": 5.07,
+      "hit_rate": 0.9747000246314086
+    },
+    {
+      "depth": 2,
+      "agents": 8,
+      "turns": 511,
+      "input": 572280,
+      "output": 129950,
+      "cache_read": 10304000,
+      "cache_write": 865000,
+      "usd_paid": 1.23,
+      "usd_ref": 6.3,
+      "hit_rate": 0.9473827448355504
+    },
+    {
+      "depth": 3,
+      "agents": 4,
+      "turns": 287,
+      "input": 163590,
+      "output": 74110,
+      "cache_read": 6637000,
+      "cache_write": 468200,
+      "usd_paid": 3.3,
+      "usd_ref": 3.3,
+      "hit_rate": 0.975944734206885
+    }
+  ],
+  "by_type": [
+    {
+      "type": "主窗",
+      "agents": 1,
+      "turns": 32,
+      "input": 14000,
+      "output": 7000,
+      "cache_read": 480000,
+      "cache_write": 72000,
+      "usd_paid": 0.94,
+      "usd_ref": 0.94,
+      "hit_rate": 0.97165991902834
+    },
+    {
+      "type": "施工员",
+      "agents": 5,
+      "turns": 283,
+      "input": 153230,
+      "output": 70670,
+      "cache_read": 6049000,
+      "cache_write": 499400,
+      "usd_paid": 1.79,
+      "usd_ref": 3.32,
+      "hit_rate": 0.9752943699282355
+    },
+    {
+      "type": "扫盘员",
+      "agents": 6,
+      "turns": 363,
+      "input": 199710,
+      "output": 91590,
+      "cache_read": 7953000,
+      "cache_write": 625800,
+      "usd_paid": 2.83,
+      "usd_ref": 4.85,
+      "hit_rate": 0.975503850866767
+    },
+    {
+      "type": "审计员",
+      "agents": 6,
+      "turns": 381,
+      "input": 499620,
+      "output": 96810,
+      "cache_read": 7386000,
+      "cache_write": 646200,
+      "usd_paid": 3.69,
+      "usd_ref": 6.04,
+      "hit_rate": 0.9366416337586645
+    },
+    {
+      "type": "general-purpose",
+      "agents": 1,
+      "turns": 62,
+      "input": 34300,
+      "output": 15700,
+      "cache_read": 1370000,
+      "cache_write": 106000,
+      "usd_paid": 0,
+      "usd_ref": 0.46,
+      "hit_rate": 0.9755750195827102
+    }
+  ],
+  "by_ticket": [
+    {
+      "ticket": "DEMO-001",
+      "agents": 19,
+      "turns": 1121,
+      "input": 900860,
+      "output": 281770,
+      "cache_read": 23238000,
+      "cache_write": 1949400,
+      "usd_paid": 9.25,
+      "usd_ref": 15.61,
+      "hit_rate": 0.9626800934261187
+    }
+  ],
+  "concurrency": [
+    {
+      "t": "10-15 13:00",
+      "n": 0
+    },
+    {
+      "t": "10-15 13:05",
+      "n": 0
+    },
+    {
+      "t": "10-15 13:10",
+      "n": 1
+    },
+    {
+      "t": "10-15 13:15",
+      "n": 5
+    },
+    {
+      "t": "10-15 13:20",
+      "n": 14
+    },
+    {
+      "t": "10-15 13:25",
+      "n": 16
+    },
+    {
+      "t": "10-15 13:30",
+      "n": 17
+    },
+    {
+      "t": "10-15 13:35",
+      "n": 17
+    },
+    {
+      "t": "10-15 13:40",
+      "n": 17
+    },
+    {
+      "t": "10-15 13:45",
+      "n": 17
+    },
+    {
+      "t": "10-15 13:50",
+      "n": 17
+    },
+    {
+      "t": "10-15 13:55",
+      "n": 17
+    },
+    {
+      "t": "10-15 14:00",
+      "n": 18
+    },
+    {
+      "t": "10-15 14:05",
+      "n": 18
+    },
+    {
+      "t": "10-15 14:10",
+      "n": 16
+    },
+    {
+      "t": "10-15 14:15",
+      "n": 16
+    },
+    {
+      "t": "10-15 14:20",
+      "n": 15
+    },
+    {
+      "t": "10-15 14:25",
+      "n": 14
+    },
+    {
+      "t": "10-15 14:30",
+      "n": 11
+    },
+    {
+      "t": "10-15 14:35",
+      "n": 9
+    },
+    {
+      "t": "10-15 14:40",
+      "n": 8
+    },
+    {
+      "t": "10-15 14:45",
+      "n": 4
+    },
+    {
+      "t": "10-15 14:50",
+      "n": 4
+    },
+    {
+      "t": "10-15 14:55",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:00",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:05",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:10",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:15",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:20",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:25",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:30",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:35",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:40",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:45",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:50",
+      "n": 4
+    },
+    {
+      "t": "10-15 15:55",
+      "n": 0
+    }
+  ],
+  "alerts": [
+    {
+      "kind": "失效",
+      "agent": "agent-06",
+      "at": "10-15 13:49",
+      "detail": "相邻模型回合间隔 425 秒，超过子代理缓存 300 秒阈值。"
+    },
+    {
+      "kind": "长调用",
+      "agent": "agent-08",
+      "at": "10-15 13:32",
+      "detail": "Bash 工具调用持续 276 秒，未使用后台执行。"
+    },
+    {
+      "kind": "按名杀",
+      "agent": "agent-12",
+      "at": "10-15 13:53",
+      "detail": "发现按进程名称结束的命令记录（脱敏样例），请核对执行方式。"
+    },
+    {
+      "kind": "标题不符",
+      "agent": "agent-04",
+      "at": "10-15 13:21",
+      "detail": "标题声明 opus，实际模型为 glm-5.3。"
+    },
+    {
+      "kind": "上下文过线",
+      "agent": "agent-02",
+      "at": "10-15 14:20",
+      "detail": "单回合上下文达到 520000 token，超过 500000 阈值。"
+    },
+    {
+      "kind": "非专用类型",
+      "agent": "agent-10",
+      "at": "10-15 13:40",
+      "detail": "代理类型为 general-purpose，未使用专用类型。"
+    },
+    {
+      "kind": "接口报错",
+      "agent": "agent-05",
+      "at": "10-15 13:27",
+      "detail": "出现 1 次合成错误回合，不计入有效用量。"
+    },
+    {
+      "kind": "低命中",
+      "agent": "agent-09",
+      "at": "10-15 14:01",
+      "detail": "GPT 代理有效回合超过 10 次，缓存命中率为 36.0%。"
+    }
+  ]
+}

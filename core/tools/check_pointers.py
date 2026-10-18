@@ -25,7 +25,7 @@
 只读铁律(写死在代码里):
   - 全程不以写模式打开任何被扫文件;除 --out 目录外不在任何地方创建东西。
   - 只扫所给根本身的真实子树:目录里的符号链接与 Windows junction 一律不下钻、
-    链接文件不扫(实测办公仓根下有指向仓外 D:/mmoharness/.agents 的 junction,
+    链接文件不扫(实测办公仓根下有指向仓外 <开窗目录>/.agents 的 junction,
     os.walk 默认会钻进去);解析后不在所扫根内的文件直接跳过,绝不入清单。
   - git 子进程只允许 rev-parse 一个子命令。
   - 永远退出 0;一切异常只打一行提示。
@@ -189,7 +189,7 @@ def walk_tree(root, skip_dirs):
     """os.walk 的只读遍历:剪掉 .git、__pycache__、排除目录与一切符号链接/junction。
 
     junction 不是 symlink,os.walk 的 followlinks=False 拦不住它;不剪的话,
-    办公仓根下的 .agents/.claude junction 会把仓外 D:/mmoharness/.agents 的
+    办公仓根下的 .agents/.claude junction 会把仓外 <开窗目录>/.agents 的
     技能目录整棵接进扫描。链接文件同理不当作被扫文件。
     """
     if not root.is_dir():

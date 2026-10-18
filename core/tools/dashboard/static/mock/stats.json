@@ -1,0 +1,854 @@
+{
+  "global": {
+    "range": {
+      "hours": 24,
+      "from": "10-14 16:00",
+      "to": "10-15 16:00"
+    },
+    "totals": {
+      "requests": 1655,
+      "tokens": 37458430,
+      "input": 1166000,
+      "output": 407830,
+      "cache_read": 32870000,
+      "cache_write": 3014600,
+      "usd_all": 23.42,
+      "usd_paid": 14.48,
+      "usd_sub": 8.94,
+      "missing_price_models": [
+        "local-unknown"
+      ]
+    },
+    "models": [
+      {
+        "model": "claude-opus-4-6",
+        "vendor": "claude",
+        "billing": "按量",
+        "requests": 287,
+        "tokens": 6012300,
+        "input": 140630,
+        "output": 67270,
+        "cache_read": 5229000,
+        "cache_write": 575400,
+        "usd": 8.6
+      },
+      {
+        "model": "gpt-6-astra",
+        "vendor": "gpt",
+        "billing": "订阅",
+        "requests": 253,
+        "tokens": 5006030,
+        "input": 420660,
+        "output": 61970,
+        "cache_read": 4058000,
+        "cache_write": 465400,
+        "usd": 4.16
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "vendor": "gpt",
+        "billing": "订阅",
+        "requests": 253,
+        "tokens": 5819300,
+        "input": 132930,
+        "output": 61970,
+        "cache_read": 5159000,
+        "cache_write": 465400,
+        "usd": 2.8
+      },
+      {
+        "model": "glm-5.3",
+        "vendor": "glm",
+        "billing": "订阅",
+        "requests": 271,
+        "tokens": 6391100,
+        "input": 145110,
+        "output": 67190,
+        "cache_read": 5693000,
+        "cache_write": 485800,
+        "usd": 1.98
+      },
+      {
+        "model": "deepseek-flash",
+        "vendor": "deepseek",
+        "billing": "按量",
+        "requests": 162,
+        "tokens": 3815600,
+        "input": 86660,
+        "output": 40140,
+        "cache_read": 3398000,
+        "cache_write": 290800,
+        "usd": 0.21
+      },
+      {
+        "model": "claude-sonnet-4-6",
+        "vendor": "claude",
+        "billing": "按量",
+        "requests": 248,
+        "tokens": 6104000,
+        "input": 137200,
+        "output": 62800,
+        "cache_read": 5480000,
+        "cache_write": 424000,
+        "usd": 4.59
+      },
+      {
+        "model": "claude-haiku-4-5",
+        "vendor": "claude",
+        "billing": "按量",
+        "requests": 177,
+        "tokens": 4292100,
+        "input": 96810,
+        "output": 44490,
+        "cache_read": 3843000,
+        "cache_write": 307800,
+        "usd": 1.08
+      },
+      {
+        "model": "local-unknown",
+        "vendor": "other",
+        "billing": "未知",
+        "requests": 4,
+        "tokens": 18000,
+        "input": 6000,
+        "output": 2000,
+        "cache_read": 10000,
+        "cache_write": 0,
+        "usd": null
+      }
+    ],
+    "groups": {
+      "by_project": [
+        {
+          "id": "demo-project",
+          "name": "工具 · 运行观测",
+          "requests": 1461,
+          "tokens": 33622430,
+          "usd": 20.16
+        },
+        {
+          "id": "demo-world",
+          "name": "世界服务端",
+          "requests": 190,
+          "tokens": 3818000,
+          "usd": 3.26
+        },
+        {
+          "id": "unknown",
+          "name": "未识别项目",
+          "requests": 4,
+          "tokens": 18000,
+          "usd": null
+        }
+      ],
+      "by_agent_type": [
+        {
+          "type": "general-purpose",
+          "requests": 62,
+          "tokens": 1526000,
+          "usd": 0.46
+        },
+        {
+          "type": "主窗",
+          "requests": 96,
+          "tokens": 1719000,
+          "usd": 2.82
+        },
+        {
+          "type": "审计员",
+          "requests": 513,
+          "tokens": 11491230,
+          "usd": 7.83
+        },
+        {
+          "type": "扫盘员",
+          "requests": 486,
+          "tokens": 11446800,
+          "usd": 5.99
+        },
+        {
+          "type": "施工员",
+          "requests": 494,
+          "tokens": 11257400,
+          "usd": 6.32
+        },
+        {
+          "type": "未知类型",
+          "requests": 4,
+          "tokens": 18000,
+          "usd": null
+        }
+      ],
+      "by_role": [
+        {
+          "role": "主窗",
+          "requests": 96,
+          "tokens": 1719000,
+          "usd": 2.82
+        },
+        {
+          "role": "子代理",
+          "requests": 1559,
+          "tokens": 35739430,
+          "usd": 20.6
+        }
+      ]
+    },
+    "trend": {
+      "bucket": "hour",
+      "points": [
+        {
+          "t": "10-15 08:00",
+          "requests": 207,
+          "tokens": 4682306,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751538,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727413,
+            "glm-5.3": 798888,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536513,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 09:00",
+          "requests": 207,
+          "tokens": 4682306,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751538,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727413,
+            "glm-5.3": 798888,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536513,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 10:00",
+          "requests": 207,
+          "tokens": 4682306,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751538,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727413,
+            "glm-5.3": 798888,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536513,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 11:00",
+          "requests": 207,
+          "tokens": 4682306,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751538,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727413,
+            "glm-5.3": 798888,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536513,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 12:00",
+          "requests": 207,
+          "tokens": 4682302,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751537,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727412,
+            "glm-5.3": 798887,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536512,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 13:00",
+          "requests": 207,
+          "tokens": 4682302,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751537,
+            "gpt-6-astra": 625754,
+            "gpt-6.1-sol": 727412,
+            "glm-5.3": 798887,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536512,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 14:00",
+          "requests": 207,
+          "tokens": 4682301,
+          "usd": 2.93,
+          "by_model": {
+            "claude-opus-4-6": 751537,
+            "gpt-6-astra": 625753,
+            "gpt-6.1-sol": 727412,
+            "glm-5.3": 798887,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536512,
+            "local-unknown": 2250
+          }
+        },
+        {
+          "t": "10-15 15:00",
+          "requests": 206,
+          "tokens": 4682301,
+          "usd": 2.91,
+          "by_model": {
+            "claude-opus-4-6": 751537,
+            "gpt-6-astra": 625753,
+            "gpt-6.1-sol": 727412,
+            "glm-5.3": 798887,
+            "deepseek-flash": 476950,
+            "claude-sonnet-4-6": 763000,
+            "claude-haiku-4-5": 536512,
+            "local-unknown": 2250
+          }
+        }
+      ]
+    }
+  },
+  "projects": {
+    "demo-project": {
+      "range": {
+        "hours": 24,
+        "from": "10-14 16:00",
+        "to": "10-15 16:00"
+      },
+      "totals": {
+        "requests": 1461,
+        "tokens": 33622430,
+        "input": 1069700,
+        "output": 362130,
+        "cache_read": 29570000,
+        "cache_write": 2620600,
+        "usd_all": 20.16,
+        "usd_paid": 12.51,
+        "usd_sub": 7.65,
+        "missing_price_models": []
+      },
+      "models": [
+        {
+          "model": "claude-opus-4-6",
+          "vendor": "claude",
+          "billing": "按量",
+          "requests": 220,
+          "tokens": 4771000,
+          "input": 110600,
+          "output": 52400,
+          "cache_read": 4180000,
+          "cache_write": 428000,
+          "usd": 6.63
+        },
+        {
+          "model": "gpt-6-astra",
+          "vendor": "gpt",
+          "billing": "订阅",
+          "requests": 215,
+          "tokens": 4242430,
+          "input": 402600,
+          "output": 53230,
+          "cache_read": 3400000,
+          "cache_write": 386600,
+          "usd": 3.62
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "vendor": "gpt",
+          "billing": "订阅",
+          "requests": 212,
+          "tokens": 4960400,
+          "input": 112840,
+          "output": 52360,
+          "cache_read": 4412000,
+          "cache_write": 383200,
+          "usd": 2.36
+        },
+        {
+          "model": "glm-5.3",
+          "vendor": "glm",
+          "billing": "订阅",
+          "requests": 227,
+          "tokens": 5436900,
+          "input": 122990,
+          "output": 56710,
+          "cache_read": 4857000,
+          "cache_write": 400200,
+          "usd": 1.67
+        },
+        {
+          "model": "deepseek-flash",
+          "vendor": "deepseek",
+          "billing": "按量",
+          "requests": 162,
+          "tokens": 3815600,
+          "input": 86660,
+          "output": 40140,
+          "cache_read": 3398000,
+          "cache_write": 290800,
+          "usd": 0.21
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "vendor": "claude",
+          "billing": "按量",
+          "requests": 248,
+          "tokens": 6104000,
+          "input": 137200,
+          "output": 62800,
+          "cache_read": 5480000,
+          "cache_write": 424000,
+          "usd": 4.59
+        },
+        {
+          "model": "claude-haiku-4-5",
+          "vendor": "claude",
+          "billing": "按量",
+          "requests": 177,
+          "tokens": 4292100,
+          "input": 96810,
+          "output": 44490,
+          "cache_read": 3843000,
+          "cache_write": 307800,
+          "usd": 1.08
+        }
+      ],
+      "groups": {
+        "by_project": [],
+        "by_agent_type": [
+          {
+            "type": "general-purpose",
+            "requests": 62,
+            "tokens": 1526000,
+            "usd": 0.46
+          },
+          {
+            "type": "主窗",
+            "requests": 64,
+            "tokens": 1146000,
+            "usd": 1.88
+          },
+          {
+            "type": "审计员",
+            "requests": 472,
+            "tokens": 10632330,
+            "usd": 7.39
+          },
+          {
+            "type": "扫盘员",
+            "requests": 448,
+            "tokens": 10683200,
+            "usd": 5.45
+          },
+          {
+            "type": "施工员",
+            "requests": 415,
+            "tokens": 9634900,
+            "usd": 4.98
+          }
+        ],
+        "by_role": [
+          {
+            "role": "主窗",
+            "requests": 64,
+            "tokens": 1146000,
+            "usd": 1.88
+          },
+          {
+            "role": "子代理",
+            "requests": 1397,
+            "tokens": 32476430,
+            "usd": 18.28
+          }
+        ]
+      },
+      "trend": {
+        "bucket": "hour",
+        "points": [
+          {
+            "t": "10-15 08:00",
+            "requests": 183,
+            "tokens": 4202805,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679613,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536513
+            }
+          },
+          {
+            "t": "10-15 09:00",
+            "requests": 183,
+            "tokens": 4202805,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679613,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536513
+            }
+          },
+          {
+            "t": "10-15 10:00",
+            "requests": 183,
+            "tokens": 4202805,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679613,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536513
+            }
+          },
+          {
+            "t": "10-15 11:00",
+            "requests": 183,
+            "tokens": 4202805,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679613,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536513
+            }
+          },
+          {
+            "t": "10-15 12:00",
+            "requests": 183,
+            "tokens": 4202803,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679612,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536512
+            }
+          },
+          {
+            "t": "10-15 13:00",
+            "requests": 182,
+            "tokens": 4202803,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530304,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679612,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536512
+            }
+          },
+          {
+            "t": "10-15 14:00",
+            "requests": 182,
+            "tokens": 4202802,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530303,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679612,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536512
+            }
+          },
+          {
+            "t": "10-15 15:00",
+            "requests": 182,
+            "tokens": 4202802,
+            "usd": 2.52,
+            "by_model": {
+              "claude-opus-4-6": 596375,
+              "gpt-6-astra": 530303,
+              "gpt-6.1-sol": 620050,
+              "glm-5.3": 679612,
+              "deepseek-flash": 476950,
+              "claude-sonnet-4-6": 763000,
+              "claude-haiku-4-5": 536512
+            }
+          }
+        ]
+      }
+    },
+    "demo-world": {
+      "range": {
+        "hours": 24,
+        "from": "10-14 16:00",
+        "to": "10-15 16:00"
+      },
+      "totals": {
+        "requests": 190,
+        "tokens": 3818000,
+        "input": 90300,
+        "output": 43700,
+        "cache_read": 3290000,
+        "cache_write": 394000,
+        "usd_all": 3.26,
+        "usd_paid": 1.97,
+        "usd_sub": 1.29,
+        "missing_price_models": []
+      },
+      "models": [
+        {
+          "model": "claude-opus-4-6",
+          "vendor": "claude",
+          "billing": "按量",
+          "requests": 67,
+          "tokens": 1241300,
+          "input": 30030,
+          "output": 14870,
+          "cache_read": 1049000,
+          "cache_write": 147400,
+          "usd": 1.97
+        },
+        {
+          "model": "gpt-6-astra",
+          "vendor": "gpt",
+          "billing": "订阅",
+          "requests": 38,
+          "tokens": 763600,
+          "input": 18060,
+          "output": 8740,
+          "cache_read": 658000,
+          "cache_write": 78800,
+          "usd": 0.54
+        },
+        {
+          "model": "gpt-6.1-sol",
+          "vendor": "gpt",
+          "billing": "订阅",
+          "requests": 41,
+          "tokens": 858900,
+          "input": 20090,
+          "output": 9610,
+          "cache_read": 747000,
+          "cache_write": 82200,
+          "usd": 0.44
+        },
+        {
+          "model": "glm-5.3",
+          "vendor": "glm",
+          "billing": "订阅",
+          "requests": 44,
+          "tokens": 954200,
+          "input": 22120,
+          "output": 10480,
+          "cache_read": 836000,
+          "cache_write": 85600,
+          "usd": 0.31
+        }
+      ],
+      "groups": {
+        "by_project": [],
+        "by_agent_type": [
+          {
+            "type": "主窗",
+            "requests": 32,
+            "tokens": 573000,
+            "usd": 0.94
+          },
+          {
+            "type": "审计员",
+            "requests": 41,
+            "tokens": 858900,
+            "usd": 0.44
+          },
+          {
+            "type": "扫盘员",
+            "requests": 38,
+            "tokens": 763600,
+            "usd": 0.54
+          },
+          {
+            "type": "施工员",
+            "requests": 79,
+            "tokens": 1622500,
+            "usd": 1.34
+          }
+        ],
+        "by_role": [
+          {
+            "role": "主窗",
+            "requests": 32,
+            "tokens": 573000,
+            "usd": 0.94
+          },
+          {
+            "role": "子代理",
+            "requests": 158,
+            "tokens": 3245000,
+            "usd": 2.32
+          }
+        ]
+      },
+      "trend": {
+        "bucket": "hour",
+        "points": [
+          {
+            "t": "10-15 08:00",
+            "requests": 24,
+            "tokens": 477251,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155163,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107363,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 09:00",
+            "requests": 24,
+            "tokens": 477251,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155163,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107363,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 10:00",
+            "requests": 24,
+            "tokens": 477251,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155163,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107363,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 11:00",
+            "requests": 24,
+            "tokens": 477251,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155163,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107363,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 12:00",
+            "requests": 24,
+            "tokens": 477249,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155162,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107362,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 13:00",
+            "requests": 24,
+            "tokens": 477249,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155162,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107362,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 14:00",
+            "requests": 23,
+            "tokens": 477249,
+            "usd": 0.41,
+            "by_model": {
+              "claude-opus-4-6": 155162,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107362,
+              "glm-5.3": 119275
+            }
+          },
+          {
+            "t": "10-15 15:00",
+            "requests": 23,
+            "tokens": 477249,
+            "usd": 0.39,
+            "by_model": {
+              "claude-opus-4-6": 155162,
+              "gpt-6-astra": 95450,
+              "gpt-6.1-sol": 107362,
+              "glm-5.3": 119275
+            }
+          }
+        ]
+      }
+    }
+  },
+  "empty": {
+    "range": {
+      "hours": 24,
+      "from": "10-14 16:00",
+      "to": "10-15 16:00"
+    },
+    "totals": {
+      "requests": 0,
+      "tokens": 0,
+      "input": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "usd_all": 0,
+      "usd_paid": 0,
+      "usd_sub": 0,
+      "missing_price_models": []
+    },
+    "models": [],
+    "groups": {
+      "by_project": [],
+      "by_agent_type": [],
+      "by_role": []
+    },
+    "trend": {
+      "bucket": "hour",
+      "points": []
+    }
+  }
+}

@@ -1,0 +1,212 @@
+[
+  {
+    "model": "claude-opus-4-6",
+    "input": 140630,
+    "output": 67270,
+    "cache_read": 5229000,
+    "cache_write": 575400,
+    "usd_paid": 8.6,
+    "usd_ref": 8.6,
+    "hit_rate": 0.9738101135459986,
+    "billing": "metered",
+    "requests": 287,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 601230
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1803690
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 2404920
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 1202460
+      }
+    ]
+  },
+  {
+    "model": "gpt-6-astra",
+    "input": 420660,
+    "output": 61970,
+    "cache_read": 4058000,
+    "cache_write": 465400,
+    "usd_paid": 0,
+    "usd_ref": 4.16,
+    "hit_rate": 0.9060745848088491,
+    "billing": "subscription",
+    "requests": 253,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 500603
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1501809
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 2002412
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 1001206
+      }
+    ]
+  },
+  {
+    "model": "gpt-6.1-sol",
+    "input": 132930,
+    "output": 61970,
+    "cache_read": 5159000,
+    "cache_write": 465400,
+    "usd_paid": 0,
+    "usd_ref": 2.8,
+    "hit_rate": 0.9748806201140227,
+    "billing": "subscription",
+    "requests": 253,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 581930
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1745790
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 2327720
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 1163860
+      }
+    ]
+  },
+  {
+    "model": "glm-5.3",
+    "input": 145110,
+    "output": 67190,
+    "cache_read": 5693000,
+    "cache_write": 485800,
+    "usd_paid": 0,
+    "usd_ref": 1.98,
+    "hit_rate": 0.9751443532239029,
+    "billing": "subscription",
+    "requests": 271,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 639110
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1917330
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 2556440
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 1278220
+      }
+    ]
+  },
+  {
+    "model": "deepseek-flash",
+    "input": 86660,
+    "output": 40140,
+    "cache_read": 3398000,
+    "cache_write": 290800,
+    "usd_paid": 0.21,
+    "usd_ref": 0.21,
+    "hit_rate": 0.9751310027377132,
+    "billing": "metered",
+    "requests": 162,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 381560
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1144680
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 1526240
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 763120
+      }
+    ]
+  },
+  {
+    "model": "claude-sonnet-4-6",
+    "input": 137200,
+    "output": 62800,
+    "cache_read": 5480000,
+    "cache_write": 424000,
+    "usd_paid": 4.59,
+    "usd_ref": 4.59,
+    "hit_rate": 0.9755750195827102,
+    "billing": "metered",
+    "requests": 248,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 610400
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1831200
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 2441600
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 1220800
+      }
+    ]
+  },
+  {
+    "model": "claude-haiku-4-5",
+    "input": 96810,
+    "output": 44490,
+    "cache_read": 3843000,
+    "cache_write": 307800,
+    "usd_paid": 1.08,
+    "usd_ref": 1.08,
+    "hit_rate": 0.9754277490538884,
+    "billing": "metered",
+    "requests": 177,
+    "hourly": [
+      {
+        "t": "10-15 13:00",
+        "tokens": 429210
+      },
+      {
+        "t": "10-15 14:00",
+        "tokens": 1287630
+      },
+      {
+        "t": "10-15 15:00",
+        "tokens": 1716840
+      },
+      {
+        "t": "10-15 16:00",
+        "tokens": 858420
+      }
+    ]
+  }
+]

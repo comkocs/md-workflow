@@ -1,0 +1,24 @@
+{
+  "子代理失效秒": 300,
+  "主窗失效秒": 3600,
+  "长调用秒": 240,
+  "详情缓存会话上限": 3,
+  "上下文警告": 400000,
+  "上下文上限": 500000,
+  "低命中最少回合": 10,
+  "低命中比例": 0.5,
+  "在跑秒": 120,
+  "模型别名": {
+    "astra": "gpt-6-astra",
+    "sol": "gpt-6.1-sol",
+    "luna": "gpt-6-luna",
+    "glm": "glm-5.3",
+    "glm-flash": "glm-5.3-flash",
+    "glmflash": "glm-5.3-flash",
+    "deepseek": "deepseek-flash",
+    "dsflash": "deepseek-flash",
+    "opus": "claude-opus",
+    "sonnet": "claude-sonnet",
+    "haiku": "claude-haiku"
+  }
+}

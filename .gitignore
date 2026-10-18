@@ -3,3 +3,4 @@ _work/
 *.log
 __pycache__/
 .claude/skills/
+core/tools/dashboard/数据缓存/

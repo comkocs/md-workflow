@@ -108,6 +108,9 @@ class TicketHTTPServer(ThreadingHTTPServer):
         self, address: tuple[str, int], handler: type[SimpleHTTPRequestHandler], service: TicketService,
         token: str = "", auth: AccountManager | None = None,
     ) -> None:
+        self.dashboard = None
+        self.dashboard_lock = threading.Lock()
+        self.dashboard_closed = False
         super().__init__(address, handler)
         self.service = service
         self.token = token
@@ -116,6 +119,16 @@ class TicketHTTPServer(ThreadingHTTPServer):
         self.server_log = service.store.root / "server.log"
         # TLS 上下文挂在这里,由 serve() 填;绝不要去包监听套接字,原因见 get_request。
         self.ssl_context: ssl.SSLContext | None = None
+
+    def server_close(self) -> None:
+        try:
+            with self.dashboard_lock:
+                self.dashboard_closed = True
+                if self.dashboard is not None:
+                    self.dashboard.关闭()
+                    self.dashboard = None
+        finally:
+            super().server_close()
 
     def get_request(self) -> tuple[Any, Any]:
         """每条连接单独包 TLS,并且把握手推迟到工作线程里做。
@@ -269,6 +282,10 @@ class TicketRequestHandler(SimpleHTTPRequestHandler):
 
     def _get(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/dashboard" or parsed.path.startswith("/dashboard/"):
+            from ..dashboard.挂载 import 处理挂载
+            处理挂载(self)
+            return
         if self.server.auth and parsed.path == "/setup":
             if not self.server.auth.setup_available():
                 self.send_error(HTTPStatus.NOT_FOUND)
@@ -398,6 +415,10 @@ class TicketRequestHandler(SimpleHTTPRequestHandler):
 
     def _post(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/dashboard" or parsed.path.startswith("/dashboard/"):
+            from ..dashboard.挂载 import 处理挂载
+            处理挂载(self)
+            return
         if self.server.auth and parsed.path in {"/auth/login", "/auth/setup", "/auth/token-login"}:
             self._login_or_setup(parsed.path)
             return

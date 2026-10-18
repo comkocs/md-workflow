@@ -1,0 +1,21 @@
+[
+  {
+    "id": "demo-world-session",
+    "title": "DEMO-002 世界服务端对账",
+    "alias": "",
+    "note": "本地脱敏样例，不代表真实执行记录。",
+    "platform": "桌面版",
+    "version": "2.1.0",
+    "start": "10-15 13:00",
+    "end": "10-15 15:55",
+    "minutes": 175,
+    "running": false,
+    "main_model": "claude-opus-4-6",
+    "agents": 4,
+    "peak_ctx": 520000,
+    "usd_paid": 1.97,
+    "usd_ref": 3.26,
+    "tokens_sub": 2576700,
+    "alerts": 2
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "demo-project",
+    "default_name": "<示例项目>/运行看板",
+    "name": "工具 · 运行观测",
+    "note": "前端与后端并行接线，集中查看模型用量与运行规矩。",
+    "cwd": "<示例项目>/运行看板",
+    "sessions": 2,
+    "running": 1,
+    "last_active": "10-15 15:55",
+    "usd_paid": 12.51,
+    "usd_ref": 20.16,
+    "tokens_sub": 14639730,
+    "alerts": 12
+  },
+  {
+    "id": "demo-world",
+    "default_name": "<示例项目>/世界服务端",
+    "name": "世界服务端",
+    "note": "已结束窗口与汇总用量的样例。",
+    "cwd": "<示例项目>/世界服务端",
+    "sessions": 1,
+    "running": 0,
+    "last_active": "10-15 15:55",
+    "usd_paid": 1.97,
+    "usd_ref": 3.26,
+    "tokens_sub": 2576700,
+    "alerts": 2
+  }
+]

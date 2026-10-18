@@ -12,6 +12,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import subprocess
 
 from tools.tickets import config, model
 from tools.tickets.service import TicketService
@@ -118,7 +119,11 @@ class WindowDirTests(existing.TicketTestCase):
         self.assertTrue(office.strip())
         skipped = {"tests", "data", "demo-data", "__pycache__"}
         hits: list[str] = []
-        for path in sorted(existing.ROOT.rglob("*")):
+        tracked = subprocess.check_output(
+            ["git", "-C", str(existing.ROOT), "ls-files", "-z", "--", "*.py", "*.json"],
+        )
+        for name in sorted(tracked.decode("utf-8").split("\0")):
+            path = existing.ROOT / name
             if path.suffix not in {".py", ".json"} or not path.is_file():
                 continue
             relative = path.relative_to(existing.ROOT)

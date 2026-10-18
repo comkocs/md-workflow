@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "scanned_at": "10-15 15:55",
+  "scan_ms": 18,
+  "bytes_read_last": 24576,
+  "bytes_read_total": 6438912,
+  "files_tracked": 32,
+  "range_hours": 24,
+  "indexing": {
+    "active": true,
+    "done_files": 42,
+    "total_files": 100,
+    "bytes_done": 42000000,
+    "bytes_total": 100000000
+  }
+}

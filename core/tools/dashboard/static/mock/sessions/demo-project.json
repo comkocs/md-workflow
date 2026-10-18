@@ -1,0 +1,40 @@
+[
+  {
+    "id": "demo-session",
+    "title": "DEMO-001 运行看板前端",
+    "alias": "前端看板施工",
+    "note": "本地脱敏样例，不代表真实执行记录。",
+    "platform": "VS Code",
+    "version": "2.1.0",
+    "start": "10-15 13:00",
+    "end": "10-15 15:55",
+    "minutes": 175,
+    "running": true,
+    "main_model": "claude-opus-4-6",
+    "agents": 18,
+    "peak_ctx": 520000,
+    "usd_paid": 9.25,
+    "usd_ref": 15.61,
+    "tokens_sub": 12063030,
+    "alerts": 8
+  },
+  {
+    "id": "demo-review",
+    "title": "DEMO-001 前端复核",
+    "alias": "",
+    "note": "本地脱敏样例，不代表真实执行记录。",
+    "platform": "桌面版",
+    "version": "2.1.0",
+    "start": "10-15 13:00",
+    "end": "10-15 15:55",
+    "minutes": 175,
+    "running": false,
+    "main_model": "claude-opus-4-6",
+    "agents": 7,
+    "peak_ctx": 520000,
+    "usd_paid": 3.26,
+    "usd_ref": 4.55,
+    "tokens_sub": 2576700,
+    "alerts": 4
+  }
+]
