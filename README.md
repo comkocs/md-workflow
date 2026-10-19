@@ -4,13 +4,23 @@
 
 md-workflow v2.0 combines a subtractive 14-gate constitution, a first-window requirements session, four tier subagents, short book task briefs, memory hooks, and a local runtime dashboard. It can run fully automatically, with human decision points retained as needed. It has been battle-tested on a large MMORPG engineering project. Engine: 327,866 lines of hand-written code (plus 31,334 lines of engine scene/resource text) · Server: 168,845 · Office tooling: 51,799 — counted from git-tracked files, as of 2026-10-18 (UTC-7) / 2026-10-19 03:53 (UTC+8).
 
+Counting configuration, data, and documents as well, that project holds about 4 million git-tracked lines of working text (code ≈ 0.55M, configuration and data ≈ 2.57M, documents ≈ 0.9M). Building an AI project, and handing it from one window to the next, runs on exactly this kind of massive text; md-workflow keeps optimizing that text and retiring what has gone stale — pointer memory is rewritten rather than appended, and subtraction review retires rules that no longer earn their place.
+
+![Runtime dashboard: subagent tree](docs/images/dashboard-subagent-tree.jpg)
+
+*The runtime dashboard's subagent-relationship view, from a real session on that project: the main window in the center, subagents along the trunk lines, grandchild agents clustered around each executor, colored by model family, with token usage on every node.*
+
 Memory and handoff are the core; the ticket desk is the work channel; the constitution supplies the workflow's gates. Use individual skills, install just the tools, or adopt the full workflow. The main directories are `core/` for tools, `desk/` for the constitution, roles, templates, and memory conventions, and `examples/` for walkthroughs.
 
 ## Standalone skills
 
-Each skill has its own instructions and supporting material. The first seven are the recommended core set, in the same order as [the skill index](desk/skill一览.md). There are three categories: **Standalone**, **Requires `core/`**, and **Full workflow required**; a skill in the last category should not be advertised as independent of the workflow.
+Each skill has its own instructions and supporting material. The first eight are the recommended core set, in the same order as [the skill index](desk/skill一览.md). There are three categories: **Standalone**, **Requires `core/`**, and **Full workflow required**; a skill in the last category should not be advertised as independent of the workflow.
 
-To install a skill, copy its entire `.agents/skills/<skill-name>/` directory into your project's `.agents/skills/` directory. For a tool-backed skill, also copy `core/` and follow the standalone setup below; for a full-workflow skill, retain its workflow dependencies.
+To install a skill, copy its entire `.agents/skills/<skill-name>/` directory into your project's `.agents/skills/` directory. For a tool-backed skill, also copy `core/` and follow the standalone setup below; for a full-workflow skill, retain its workflow dependencies. To have an AI install one, replace `<skill-name>` (for example `pointer-handoff`) and paste:
+
+```text
+Clone https://github.com/comkocs/md-workflow into a temporary directory, copy its .agents/skills/<skill-name>/ directory into my project's .agents/skills/, then read that SKILL.md and fill in its placeholders with my project's values, asking me about anything you cannot determine.
+```
 
 ### ⭐ `hive-dispatch` — Hive dispatch
 
@@ -39,6 +49,10 @@ To install a skill, copy its entire `.agents/skills/<skill-name>/` directory int
 ### ⭐ `top-audit-dispatch` — Independent anti-hallucination audit
 
 **Category: Standalone.** After work is merged, commission an independent anti-hallucination audit against the requirements and delivered artifacts, not the implementer's narrative. The audit separates fabricated claims, typos, omissions, unchecked items, and environment limits, with counts at the start and specific mismatches below. A rework merge gets a fresh auditor rather than reusing the implementation context; bundled prompts and report material support independent verification.
+
+### ⭐ `subtraction-review` — Subtraction review
+
+**Category: Standalone.** Periodically review the gate ledger, temporary daily rules, size budgets, and historical appendix instead of allowing rules to accumulate indefinitely. Use evidence to choose retirement, a justified renewal, or promotion to a lasting rule, then produce the four-part review and register the decision. Steps and templates are self-contained; the user supplies the project's records and decision register.
 
 ### `first-window-requirements` — First-window requirements
 
@@ -88,10 +102,6 @@ To install a skill, copy its entire `.agents/skills/<skill-name>/` directory int
 
 **Category: Full workflow required.** When the memory index approaches its limit or the loaded tail has been truncated, move an entire section unchanged into a secondary volume and leave one entry at the original location. Back up, preview, fold, and compare entries so nothing is lost; deleting lessons is not a substitute for folding. This skill depends on the full workflow's memory-index conventions and folding tool.
 
-### `subtraction-review` — Subtraction review
-
-**Category: Standalone.** Periodically review the gate ledger, temporary daily rules, size budgets, and historical appendix instead of allowing rules to accumulate indefinitely. Use evidence to choose retirement, a justified renewal, or promotion to a lasting rule, then produce the four-part review and register the decision. Steps and templates are self-contained; the user supplies the project's records and decision register.
-
 ### `open-source-preflight` — Open-source preflight
 
 **Category: Standalone.** Before publication, check the proposed tree and history for secrets, deployment details, local paths, identities, and material that lacks redistribution rights. Separate runnable scans from licensing and authorization evidence that requires human confirmation, and record missing tools or evidence as unchecked rather than as zero findings. The skill does not authorize publishing, rewriting history, or removing assets on its own.
@@ -116,7 +126,7 @@ The two hooks in `core/tools/hooks/` are complementary. `防回潮检查.py` is 
 
 Both scripts use the standard library and only emit guidance, not edit blocks. Follow [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) to merge event configuration without replacing existing settings and to check the actual reinjection sources. Preserve three things in a compact summary: decisions with timestamps, cross-window values and time windows, and active agents with what they are waiting for and what to do when they return. A zero exit code or no output alone does not prove installation succeeded; in a `core/`-only setup, checks needing an absent workflow word list or budget table are skipped.
 
-## Standalone
+## ⭐ Standalone: ticket desk and runtime dashboard
 
 To use the ticket desk and runtime dashboard without the constitution, copy just the `core/` directory into a tools directory of your choice and change the `办公目录` key in `core/desk_config.json` to your own office-document directory, which need not exist yet. These tools use only Python's standard library; `desk/`, `.agents/`, and the workflow constitution are not prerequisites. Install any selected skills separately using the method above.
 
@@ -130,10 +140,10 @@ python -X utf8 -I core/tools/dashboard/server.py
 
 The first command starts the ticket desk, the second lists its local-only CLI commands, and the third starts the dashboard independently in isolated mode; use the local address printed by each service and stop a foreground service with Ctrl+C. If the local ticket desk is already running, its “Runtime dashboard” entry opens the dashboard in the same process and on the same port, so a second dashboard process is unnecessary. The dashboard covers Claude Code records only and does not modify session records. See [the dashboard guide](core/tools/dashboard/README.md) for coverage and configuration.
 
-Paste this one-sentence activation instruction into your AI window after providing the source copy and your chosen directories:
+Paste this one-sentence activation instruction into your AI window; it fetches the project from GitHub itself:
 
 ```text
-Copy only core/ from the product copy I provide into my chosen tools directory, set the 办公目录 key in core/desk_config.json to my office-document directory, then use the commands in this section to start the local ticket desk and runtime dashboard without installing the workflow constitution or changing my existing rules.
+Clone https://github.com/comkocs/md-workflow into a temporary directory, copy only its core/ directory into my chosen tools directory, set the 办公目录 key in core/desk_config.json to my office-document directory (ask me for both directories if I have not given them), then start the local ticket desk with python -X utf8 core/start.py and open its Runtime dashboard entry, without installing the workflow constitution or changing my existing rules.
 ```
 
 For an isolated ticket-desk demonstration, use `python -X utf8 core/start.py --demo`; its data is separate from the regular desk. For a complete worked task, follow [the walkthrough](examples/README.md).
@@ -142,10 +152,10 @@ For an isolated ticket-desk demonstration, use `python -X utf8 core/start.py --d
 
 Read [the startup guide](desk/开局向导.md) and choose its initial branch: **new project**, **legacy-project handoff**, or **workflow-only installation**. A new project completes the first-window requirements work before repository creation; a legacy project first preserves and checks its existing rules and sources; workflow-only installation skips requirements intake and uses the existing repository where appropriate.
 
-Paste this instruction into a window that has access to the product copy:
+Paste this instruction into an AI window opened in your project directory; the guide clones the project itself:
 
 ```text
-Follow desk/开局向导.md from the product copy I provide, first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.
+Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.
 ```
 
 The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.1**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
@@ -168,13 +178,23 @@ This project grew out of a failure. On August 25, I wrote the first line of code
 
 md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档子代理、短书、记忆钩子与本机运行看板。可全自动运行，拍板点可按需保留。已经过大型 MMORPG 工程实战验证。引擎手写代码 327,866 行（另有引擎场景／资源等资产文本 31,334 行）· 服务端代码 168,845 行 · 办公代码 51,799 行——按 git 跟踪文件计，统计截止 2026-10-18（UTC-7）／2026-10-19 03:53（UTC+8）。
 
+连配置数据与文档一起算，该工程按 git 跟踪文件合计约 400 万行工作文本（代码约 55 万、配置与数据约 257 万、文档约 90 万）。AI 项目的构建与传递，靠的就是这样的海量文本；本项目能不断优化文本、淘汰文本——指针记忆覆盖式重写而不是追加，减法审定期淘汰不再值得留的规矩。
+
+![运行看板：子孙代理关系](docs/images/dashboard-subagent-tree.jpg)
+
+*运行看板「子孙代理关系」视图，取自该工程的一次真实会话：主窗居中，子代理沿主干排开，孙代理围在各执行员四周，按模型家族着色，每个节点标出用量。*
+
 记忆与接管是内核，工单台是工作通道，宪法提供流程闸口。可以只用独立 skill、只装工具，也可以采用整套工作流。主要目录是工具 `core/`、宪法／角色／模板／记忆规范 `desk/`，以及演练案例 `examples/`。
 
 ## 独立 skill
 
-每个 skill 都有自己的指令与配套材料。前七个是建议优先选择的核心项，顺序与 [skill 一览](desk/skill一览.md) 一致。分类共三类：**单独装即可用**、**装 core/ 即可用**、**需要 md-workflow 全套**；最后一类不能宣传成脱离工作流也能独立使用。
+每个 skill 都有自己的指令与配套材料。前八个是建议优先选择的核心项，顺序与 [skill 一览](desk/skill一览.md) 一致。分类共三类：**单独装即可用**、**装 core/ 即可用**、**需要 md-workflow 全套**；最后一类不能宣传成脱离工作流也能独立使用。
 
-安装时，把 `.agents/skills/<skill-name>/` 整个目录拷到你项目的 `.agents/skills/` 下。依赖工具的 skill 还要拷 `core/` 并按下文单独安装；依赖全套工作流的 skill 则须保留其流程依赖。
+安装时，把 `.agents/skills/<skill-name>/` 整个目录拷到你项目的 `.agents/skills/` 下。依赖工具的 skill 还要拷 `core/` 并按下文单独安装；依赖全套工作流的 skill 则须保留其流程依赖。想让 AI 代装，把 `<skill-name>` 换成要装的名字（如 `pointer-handoff`）后贴这一句：
+
+```text
+把 https://github.com/comkocs/md-workflow 克隆到一个临时目录，把其中 .agents/skills/<skill-name>/ 整个目录拷到我项目的 .agents/skills/ 下，再读该 SKILL.md，按我项目的实值填好其中占位，定不了的问我。
+```
 
 ### ⭐ `hive-dispatch` — 蜂巢式派遣
 
@@ -203,6 +223,10 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 ### ⭐ `top-audit-dispatch` — 独立顶级审计（防幻觉）
 
 **分类：单独装即可用。** 一单并入后，另派独立审计者按需求和实际交付物做防幻觉核验，不照施工者的自述判。审计把幻觉、笔误、漏做、未核与环境限制分开，首行给计数，下列具体不符项。返工再并后另起新审计，不沿用施工上下文；自带提示词与报告材料支持独立核实。
+
+### ⭐ `subtraction-review` — 减法审
+
+**分类：单独装即可用。** 定期清闸账、当日口径、预算表与历史附录，避免规矩只加不减。按实证判退役、带理由续期或转长期，产出四块减法审报告并登记裁定。步骤和模板自包含，项目记录与裁定簿由使用方提供。
 
 ### `first-window-requirements` — 首次需求对接
 
@@ -252,10 +276,6 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 **分类：需要 md-workflow 全套。** 索引将满或加载末尾被截断时，把一整节原样挪入二级分册，原处只留一行入口。先备份、预演、折叠，再逐条对照，不能靠删教训来瘦身。依赖全套工作流的索引规范与折叠工具。
 
-### `subtraction-review` — 减法审
-
-**分类：单独装即可用。** 定期清闸账、当日口径、预算表与历史附录，避免规矩只加不减。按实证判退役、带理由续期或转长期，产出四块减法审报告并登记裁定。步骤和模板自包含，项目记录与裁定簿由使用方提供。
-
 ### `open-source-preflight` — 开源前检查
 
 **分类：单独装即可用。** 公开前核准备发布的树和历史，查秘密、部署信息、本机路径、身份与缺再分发权的素材。能跑的扫描与须人工确认的版权、授权证据分开；缺工具或证据记未核，不冒充零命中。skill 本身不授权发布、重写历史或自行移除素材。
@@ -280,7 +300,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 两脚本只用标准库，只输出提示，不拦截编辑。按 [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) 合并事件配置、保留原设置并核实际回灌来源。压缩摘要保住三样：带时刻的拍板、跨窗数值与时段、在跑代理及其等待项和返回动作。退出码为零或没有输出都不能单独证明安装成功；只装 `core/` 时，需要外置流程词表或预算表的检查会跳过。
 
-## 单独安装
+## ⭐ 单独安装：工单台与运行看板
 
 不装宪法也能用工单台与运行看板：只拷 `core/` 一个目录到自己选的工具目录，把 `core/desk_config.json` 的「办公目录」改成自己的办公文件目录，该目录可以尚不存在。工具只用 Python 标准库，不依赖 `desk/`、`.agents/` 或工作流宪法。要用的 skill 按上文另装。
 
@@ -294,10 +314,10 @@ python -X utf8 -I core/tools/dashboard/server.py
 
 第一条起工单台，第二条列只读写本机数据的命令行用法，第三条以隔离模式独立起看板；打开各服务终端打印的本机地址，前台服务按 Ctrl+C 停止。本机工单台已起时，点顶栏「运行看板」即可同进程、同端口打开，不必再起第二个看板进程。看板只覆盖 Claude Code 记录，不改会话记录。覆盖范围与配置详见 [看板说明](core/tools/dashboard/README.md)。
 
-提供产品副本与选定目录后，把这一句激活指令贴给 AI：
+把这一句激活指令贴给 AI，它会自己从 GitHub 拉取项目：
 
 ```text
-从我提供的产品副本中只拷 core/ 到我选定的工具目录，把 core/desk_config.json 的「办公目录」设为我的办公文件目录，再按本节命令启动本机工单台与运行看板，不安装工作流宪法、不改我的现有规矩。
+把 https://github.com/comkocs/md-workflow 克隆到一个临时目录，只把其中的 core/ 拷到我选定的工具目录，把 core/desk_config.json 的「办公目录」设为我的办公文件目录（两个目录我没给就先问我），再用 python -X utf8 core/start.py 启动本机工单台并打开顶栏「运行看板」，不安装工作流宪法、不改我的现有规矩。
 ```
 
 想独立演练工单台，用 `python -X utf8 core/start.py --demo`，演示数据与正式台分开。完整走一张单见 [演练说明](examples/README.md)。
@@ -306,10 +326,10 @@ python -X utf8 -I core/tools/dashboard/server.py
 
 读 [开局向导](desk/开局向导.md)，在首页选 **新项目**、**接管老项目** 或 **只装流程**。新项目先完成首次需求对接再建仓；老项目先保留并核现有规矩与真源；只装流程跳过需求对接，适用时沿用现有仓。
 
-给能读产品副本的窗口贴这一句：
+在项目目录开一个 AI 窗贴这一句，向导会自己克隆项目：
 
 ```text
-执行我提供的产品副本中 desk/开局向导.md，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。
+执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。
 ```
 
 整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.1**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
