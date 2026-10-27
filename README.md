@@ -2,7 +2,7 @@
 
 ## Overview
 
-md-workflow v2.0 combines a subtractive 14-gate constitution, a first-window requirements session, four tier subagents, short book task briefs, memory hooks, and a local runtime dashboard. It can run fully automatically, with human decision points retained as needed. It has been battle-tested on a large MMORPG engineering project. Engine: 327,866 lines of hand-written code (plus 31,334 lines of engine scene/resource text) · Server: 168,845 · Office tooling: 51,799 — counted from git-tracked files, as of 2026-10-18 (UTC-7) / 2026-10-19 03:53 (UTC+8).
+md-workflow v2.0 combines a subtractive 14-gate constitution, a first-window requirements session, four tier subagents, short book task briefs, memory hooks, and a local runtime dashboard. It can run fully automatically, with human decision points retained as needed. It stays lightweight: Claude Code or VS Code alone is enough to run it, with no harness needed, and the edition that comes with a harness is called Panedesk. It has been battle-tested on a large MMORPG engineering project. Engine: 327,866 lines of hand-written code (plus 31,334 lines of engine scene/resource text) · Server: 168,845 · Office tooling: 51,799 — counted from git-tracked files, as of 2026-10-18 (UTC-7) / 2026-10-19 03:53 (UTC+8).
 
 Counting configuration, data, and documents as well, that project holds about 4 million git-tracked lines of working text (code ≈ 0.55M, configuration and data ≈ 2.57M, documents ≈ 0.9M). Building an AI project, and handing it from one window to the next, runs on exactly this kind of massive text; md-workflow keeps optimizing that text and retiring what has gone stale — pointer memory is rewritten rather than appended, and subtraction review retires rules that no longer earn their place.
 
@@ -10,7 +10,11 @@ Counting configuration, data, and documents as well, that project holds about 4 
 
 *The runtime dashboard's subagent-relationship view, from a real session on that project: the main window in the center, subagents along the trunk lines, grandchild agents clustered around each executor, colored by model family, with token usage on every node.*
 
-Memory and handoff are the core; the ticket desk is the work channel; the constitution supplies the workflow's gates. Use individual skills, install just the tools, or adopt the full workflow. The main directories are `core/` for tools, `desk/` for the constitution, roles, templates, and memory conventions, and `examples/` for walkthroughs.
+Memory and handoff are the core; the ticket desk is the work channel; the constitution supplies the workflow's gates. Use individual skills, install just the tools, or adopt the full workflow. The main directories are `core/` for tools, `desk/` for the constitution, roles, templates, and memory conventions, `desk/真源/` for the general working-rule set that a new project trims from, and `examples/` for walkthroughs.
+
+## Start a new project
+
+The first window checks your requirements and does not ask again about anything you have already made clear. It then trims working rules to fit the project from the source table in `desk/真源/`, which holds 215 entries drawn from the current rules of a million-line MMORPG project, each with its reason and the condition for adding it back. A small project starts in a single window and stays lightweight; a medium or large one then adds the ticket desk and director seats. The opening instruction is the same one-sentence prompt given under [Start the full workflow](#start-the-full-workflow) below; choose its new-project branch.
 
 ## Standalone skills
 
@@ -56,7 +60,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### `first-window-requirements` — First-window requirements
 
-**Category: Standalone.** Before creating a new project repository, collect the user's requirements verbatim, select a scale preset, and confirm a mind map, product document, and either a UI prototype or architecture diagram. Then split the agreed scope into modules and tasks and fill in coding standards, with asset-management rules only when relevant. The required skeletons are included; incomplete requirements evidence is not a reason to invent features or create the repository early.
+**Category: Standalone.** Before creating a new project repository, collect the user's requirements verbatim; distill ten questions to fill a requirements card, set the tier by the ruler, trim out the working rules, and select a preset; and confirm a mind map, product document, and either a UI prototype or architecture diagram. Then split the agreed scope into modules and tasks and fill in coding standards, with asset-management rules only when relevant. The required skeletons are included; incomplete requirements evidence is not a reason to invent features or create the repository early.
 
 ### `legacy-project-onboarding` — Legacy-project onboarding
 
@@ -64,7 +68,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### `short-book-drafting` — Short book task briefs
 
-**Category: Standalone.** Turn a large task into five concise blocks: the problem, settled decisions, acceptance criteria and allowed changes, baseline pointers, and merge/audit/unchecked-item expectations. The main window defines what is required and where work may occur; the executor arranges the implementation. The bundled short book, lightweight gate procedure, and delegation requirements make the boundary explicit without expanding the brief into a long serial script.
+**Category: Standalone.** Turn a large task into five concise blocks: the problem, settled decisions, acceptance criteria and allowed changes, baseline pointers, and merge/audit/unchecked-item expectations. The main window defines what is required and where work may occur, and the build window dispatches subagents to implement it directly; an executor takes over only when a fallback trigger fires. The bundled short book, lightweight gate procedure, and delegation requirements make the boundary explicit without expanding the brief into a long serial script.
 
 ### `zero-window-taskbook-drafting` — Optional two-window task brief
 
@@ -150,6 +154,8 @@ For an isolated ticket-desk demonstration, use `python -X utf8 core/start.py --d
 
 ## Start the full workflow
 
+This is the full-workflow route (ticket desk + director seats + 14 gates); for a new project, start with [Start a new project](#start-a-new-project) above.
+
 Read [the startup guide](desk/开局向导.md) and choose its initial branch: **new project**, **legacy-project handoff**, or **workflow-only installation**. A new project completes the first-window requirements work before repository creation; a legacy project first preserves and checks its existing rules and sources; workflow-only installation skips requirements intake and uses the existing repository where appropriate.
 
 Paste this instruction into an AI window opened in your project directory; the guide clones the project itself:
@@ -158,7 +164,7 @@ Paste this instruction into an AI window opened in your project directory; the g
 Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.
 ```
 
-The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.1**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
+The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.2**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
 
 ## License
 
@@ -176,7 +182,7 @@ This project grew out of a failure. On August 25, I wrote the first line of code
 
 ## 总览
 
-md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档子代理、短书、记忆钩子与本机运行看板。可全自动运行，拍板点可按需保留。已经过大型 MMORPG 工程实战验证。引擎手写代码 327,866 行（另有引擎场景／资源等资产文本 31,334 行）· 服务端代码 168,845 行 · 办公代码 51,799 行——按 git 跟踪文件计，统计截止 2026-10-18（UTC-7）／2026-10-19 03:53（UTC+8）。
+md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档子代理、短书、记忆钩子与本机运行看板。可全自动运行，拍板点可按需保留。保持轻便：只装 Claude Code 或 VS Code 就能跑，不需要任何 harness；带 harness 的版本叫 Panedesk。已经过大型 MMORPG 工程实战验证。引擎手写代码 327,866 行（另有引擎场景／资源等资产文本 31,334 行）· 服务端代码 168,845 行 · 办公代码 51,799 行——按 git 跟踪文件计，统计截止 2026-10-18（UTC-7）／2026-10-19 03:53（UTC+8）。
 
 连配置数据与文档一起算，该工程按 git 跟踪文件合计约 400 万行工作文本（代码约 55 万、配置与数据约 257 万、文档约 90 万）。AI 项目的构建与传递，靠的就是这样的海量文本；本项目能不断优化文本、淘汰文本——指针记忆覆盖式重写而不是追加，减法审定期淘汰不再值得留的规矩。
 
@@ -184,7 +190,11 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 *运行看板「子孙代理关系」视图，取自该工程的一次真实会话：主窗居中，子代理沿主干排开，孙代理围在各执行员四周，按模型家族着色，每个节点标出用量。*
 
-记忆与接管是内核，工单台是工作通道，宪法提供流程闸口。可以只用独立 skill、只装工具，也可以采用整套工作流。主要目录是工具 `core/`、宪法／角色／模板／记忆规范 `desk/`，以及演练案例 `examples/`。
+记忆与接管是内核，工单台是工作通道，宪法提供流程闸口。可以只用独立 skill、只装工具，也可以采用整套工作流。主要目录是工具 `core/`、宪法／角色／模板／记忆规范 `desk/`、新项目裁剪用的通用规矩集 `desk/真源/`，以及演练案例 `examples/`。
+
+## 新项目第一窗
+
+第一窗先核对需求，已经说清的不再追问。然后从 `desk/真源/` 的真源条目表里按项目裁出作业规矩：条目表共 215 条，源自一个百万行 MMORPG 项目的现行规矩，每条都带「为什么」与加回条件。小项目一扇窗就能开工，保持轻便；中大型项目再装工单台与总监位。开窗句仍是下文 [启动整套工作流](#启动整套工作流) 一节里的那一句，选新项目分支即可。
 
 ## 独立 skill
 
@@ -230,7 +240,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### `first-window-requirements` — 首次需求对接
 
-**分类：单独装即可用。** 新项目建仓前，先逐字收需求、判规模选预设，再确认思维导图、产品文档与原型图或架构图。确认后把范围拆成模块与单，填好代码规范，有相关素材时才补素材管理规范。所需骨架自带；证据不齐不能靠编功能或提前建仓补过去。
+**分类：单独装即可用。** 新项目建仓前，先逐字收需求、归纳十题填需求卡、按尺子判档、裁出作业规矩、选预设，再确认思维导图、产品文档与原型图或架构图。确认后把范围拆成模块与单，填好代码规范，有相关素材时才补素材管理规范。所需骨架自带；证据不齐不能靠编功能或提前建仓补过去。
 
 ### `legacy-project-onboarding` — 老项目接入
 
@@ -238,7 +248,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### `short-book-drafting` — 短书起草
 
-**分类：单独装即可用。** 把大型工单压成五块：出题、已定口径、判据与改动面、底数指针、并线／审计／未核要求。主窗定要什么和只许改哪里，执行员自己编排施工。自带短书、轻闸工序与派遣要求，交清边界，而不是把任务书扩成长串行脚本。
+**分类：单独装即可用。** 把大型工单压成五块：出题、已定口径、判据与改动面、底数指针、并线／审计／未核要求。主窗定要什么和只许改哪里，施工主窗直派子代理施工；回退线才交执行员。自带短书、轻闸工序与派遣要求，交清边界，而不是把任务书扩成长串行脚本。
 
 ### `zero-window-taskbook-drafting` — 0 号任务书起草（选用，仅双窗）
 
@@ -324,6 +334,8 @@ python -X utf8 -I core/tools/dashboard/server.py
 
 ## 启动整套工作流
 
+这是全套路线（工单台 + 总监位 + 14 闸）；新项目先走上一节 [新项目第一窗](#新项目第一窗)。
+
 读 [开局向导](desk/开局向导.md)，在首页选 **新项目**、**接管老项目** 或 **只装流程**。新项目先完成首次需求对接再建仓；老项目先保留并核现有规矩与真源；只装流程跳过需求对接，适用时沿用现有仓。
 
 在项目目录开一个 AI 窗贴这一句，向导会自己克隆项目：
@@ -332,7 +344,7 @@ python -X utf8 -I core/tools/dashboard/server.py
 执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。
 ```
 
-整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.1**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
+整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.2**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
 
 ## 许可
 
