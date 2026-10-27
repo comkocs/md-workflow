@@ -1,5 +1,9 @@
 # md-workflow · Hive-style Subagents · Million-scale Code Engineering Skills
 
+**One-click download & run:** open an AI window (Claude Code or VS Code) in your project directory and paste this: `Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.`
+
+**一键下载运行：** 在项目目录开一个 AI 窗（Claude Code 或 VS Code）贴这一句：`执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。`
+
 ## Overview
 
 md-workflow v2.0 combines a subtractive 14-gate constitution, a first-window requirements session, four tier subagents, short book task briefs, memory hooks, and a local runtime dashboard. It can run fully automatically, with human decision points retained as needed. It stays lightweight: Claude Code or VS Code alone is enough to run it, with no harness needed, and the edition that comes with a harness is called Panedesk. It has been battle-tested on a large MMORPG engineering project. Engine: 327,866 lines of hand-written code (plus 31,334 lines of engine scene/resource text) · Server: 168,845 · Office tooling: 51,799 — counted from git-tracked files, as of 2026-10-18 (UTC-7) / 2026-10-19 03:53 (UTC+8).
