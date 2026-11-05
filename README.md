@@ -60,7 +60,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### ⭐ `subtraction-review` — Subtraction review
 
-**Category: Standalone.** Periodically review the gate ledger, temporary daily rules, size budgets, and historical appendix instead of allowing rules to accumulate indefinitely. Use evidence to choose retirement, a justified renewal, or promotion to a lasting rule, then produce the four-part review and register the decision. Steps and templates are self-contained; the user supplies the project's records and decision register.
+**Category: Standalone.** Periodically review the gate ledger, temporary daily rules, size budgets, and historical appendix instead of allowing rules to accumulate indefinitely. Use evidence to choose retirement, a justified renewal, or promotion to a lasting rule, then produce the six-part review and register the decision. Steps and templates are self-contained; the user supplies the project's records and decision register.
 
 ### `first-window-requirements` — First-window requirements
 
@@ -168,7 +168,7 @@ Paste this instruction into an AI window opened in your project directory; the g
 Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.
 ```
 
-The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.2**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
+The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.3**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
 
 ## License
 
@@ -240,7 +240,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### ⭐ `subtraction-review` — 减法审
 
-**分类：单独装即可用。** 定期清闸账、当日口径、预算表与历史附录，避免规矩只加不减。按实证判退役、带理由续期或转长期，产出四块减法审报告并登记裁定。步骤和模板自包含，项目记录与裁定簿由使用方提供。
+**分类：单独装即可用。** 定期清闸账、当日口径、预算表与历史附录，避免规矩只加不减。按实证判退役、带理由续期或转长期，产出六块减法审报告并登记裁定。步骤和模板自包含，项目记录与裁定簿由使用方提供。
 
 ### `first-window-requirements` — 首次需求对接
 
@@ -348,7 +348,7 @@ python -X utf8 -I core/tools/dashboard/server.py
 执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。
 ```
 
-整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.2**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
+整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.3**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
 
 ## 许可
 
