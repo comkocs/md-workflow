@@ -140,7 +140,10 @@ install -d -o "$SERVICE_USER" -g "$SERVICE_USER" "$APP/tools"
 cp -a "$SOURCE/tools/tickets" "$APP/tools/tickets"
 cp -a "$SOURCE/tools/browser" "$APP/tools/browser"
 if [[ -d "$SOURCE/extensions" ]]; then cp -a "$SOURCE/extensions" "$APP/extensions"; fi
-if [[ -f "$SOURCE/desk_config.json" ]]; then cp -a "$SOURCE/desk_config.json" "$APP/desk_config.json"; fi
+# 已有项目配置由服务器维护,只在首次缺件时采用包内配置。
+if [[ ! -f "$APP/desk_config.json" && -f "$SOURCE/desk_config.json" ]]; then
+  cp -a "$SOURCE/desk_config.json" "$APP/desk_config.json"
+fi
 chown -R "$SERVICE_USER:$SERVICE_USER" "$APP"
 systemctl restart "$SERVICE_NAME.service"
 

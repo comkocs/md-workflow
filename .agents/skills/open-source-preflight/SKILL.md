@@ -41,6 +41,10 @@ description: 准备把私有仓库或提炼后的流程资料公开前使用。�
 | 私钥文件 | `git grep -IlE -e '-----BEGIN ([A-Z0-9]+ )*PRIVATE KEY-----'` | 检查命中内容与密钥文件，移出仓并撤销对应凭据；不能只改后缀。 |
 | 仓外凭据 | `git config --name-only --get-regexp '^credential\.'` | 此命令只列凭据配置键作为盘点入口；另核宿主和服务端凭据台账，开源前一并轮换，不因仓内零命中跳过。 |
 
+本机没有 gitleaks 时，完整历史用下面的替代扫描（`--all` 覆盖全部已备齐引用，只列提交与文件名，不回显值）：
+`git rev-list --all | while IFS= read -r rev; do git grep -IlEi -e '(password|passwd|secret|token|api[_-]?key)[[:space:]]*[:=]' -e '-----BEGIN ([A-Z0-9]+ )*PRIVATE KEY-----' "$rev" --; rc=$?; [ "$rc" -le 1 ] || exit "$rc"; done`
+这只是字样候选扫描，不等同 gitleaks；现树另按下一节扫描，审计件仍记「环境限制」，不得把替代零命中记成 gitleaks 通过。
+
 ### 3. 地址与部署信息
 
 | 检查项 | 可跑命令 | 要做 |
@@ -48,6 +52,10 @@ description: 准备把私有仓库或提炼后的流程资料公开前使用。�
 | 数字地址候选 | `git grep -IlE '([0-9]{1,3}\.){3}[0-9]{1,3}'` | 人工排除回环、通配、掩码、版本号误报，公网地址换占位，内网地址整类删除。 |
 | 部署脚本服务器信息 | `git grep -IlEi -e 'host[[:space:]]*[:=]' -e 'server[[:space:]]*[:=]' -e 'endpoint[[:space:]]*[:=]' -e 'port[[:space:]]*[:=]' -- '*.sh' '*.ps1' '*.py' '*.yaml' '*.yml' '*.json'` | 核地址、账号和连接参数，改读环境变量；脚本外的部署配置同样核。 |
 | 现树明文配置 | `gitleaks dir . --redact --exit-code 1` | 覆盖当前文件及未跟踪配置候选；先去掉现树真值，历史另按已定方案处理，不能用现树安全代替历史安全。 |
+
+本机没有 gitleaks 时，现树用下面的替代扫描（含未跟踪与被忽略文件，只列文件名，不回显值）：
+`git grep --untracked --no-exclude-standard -IlEi -e '(password|passwd|secret|token|api[_-]?key)[[:space:]]*[:=]' -e '-----BEGIN ([A-Z0-9]+ )*PRIVATE KEY-----' -- .`
+完整历史仍须跑上一节带 `--all` 的扫描；两者只提供人工核查候选，审计件仍记「环境限制」。
 
 ### 4. 路径与身份
 

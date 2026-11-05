@@ -55,6 +55,7 @@ git -C <仓路径> fetch origin
 # 3. 看基点:远端主干最新一笔
 git -C <仓路径> log --oneline -1 origin/main
 # 4. 量记忆索引并看末行(判法见本块下方)
+# 有 python 用 python,没有用 py -X utf8 替换下面的 python,其余参数不变
 python -c "import io;print(len(io.open(r'<记忆目录>/MEMORY.md',encoding='utf-8').read()))"
 tail -1 <记忆目录>/MEMORY.md
 # 5. 取时间戳(写件抬头用,别凭印象写时间)

@@ -16,6 +16,8 @@ description: 当要报一个或多个仓的代码规模、把行数分代码、�
 - {{统计命令}}:统计脚本入口,在仓根跑;例:python -X utf8 core/tools/repo_scale.py
 - {{规则文件}}:UTF-8 JSON 分类规则件,五个键全部可省;例:rules.json
 
+有 `python` 用 `python`;没有时将统计命令的 `python -X utf8` 换成 `py -X utf8`,其余参数不变。
+
 ## 什么时候用
 
 - 要在报告或对外介绍里写一个仓的代码行数与测试、配置、文档体量。

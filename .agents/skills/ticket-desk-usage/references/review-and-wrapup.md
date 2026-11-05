@@ -5,7 +5,7 @@
 ## 当前值面(复检位、总编排位)
 
 1. 读:`{{工单台命令}} state get`(一份 JSON)或任一 `receipt` 的末行。各位只读不抄。
-2. 改:只有复检位与总编排位能改,`{{工单台命令}} state set <键> <值> --by <位名>`。键只有 `judging_resolution`、`deploy_head_engine`、`deploy_head_server`、`walk_run_speed`、`pending_shared_tools`;每个键怎么写见原件表格。没人填的项显示「未填」,工具不替你填。细节见原件「当前值面」。
+2. 改:只有复检位与总编排位能改,`{{工单台命令}} state set <键> <值> --by <位名>`。键只有 `evidence_resolution`、`deploy_head_secondary`、`deploy_head_server`、`pending_shared_tools`;每个键怎么写见原件表格。没人填的项显示「未填」,工具不替你填。细节见原件「当前值面」。
 
 ## 复验与并线落账
 

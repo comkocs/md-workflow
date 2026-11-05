@@ -169,77 +169,45 @@ BLOCK_KINDS = (BLOCK_BUSINESS, BLOCK_NON_BUSINESS)
 
 # ── 当前值面────────────────────────────────
 # 规矩落宪法，当前值落这里一处。这几个数每天都在变，谁把它转抄进自己的接管件，
-# 抄件就再也不会自己更新—— 那张单正是照着抄错的判据图尺寸做的，整张作废。
+# 抄件就再也不会自己更新—— 那张单正是照着抄错的验收图规格做的，整张作废。
 # 所以：各位读它，不要抄它；能改它的只有复检席与总编排。
 STATE_KEYS = (
-    "judging_resolution", "deploy_head_engine", "deploy_head_server",
-    "walk_run_speed", "pending_shared_tools",
+    "evidence_resolution", "deploy_head_secondary", "deploy_head_server",
+    "pending_shared_tools",
 )
 STATE_WRITERS = (REVIEW_SLOT, CONDUCTOR_SLOT)
 STATE_UNSET = "未填"
 STATE_UNSET_HINT = f"{STATE_UNSET}，请复检席用 state set 填"
 STATE_HELP = {
-    "judging_resolution": "判据图尺寸，写成 宽x高，例如 1280x720",
-    "deploy_head_engine": "引擎仓当前部署头，7～40 位十六进制短提交号",
+    "evidence_resolution": "验收图规格，写成 宽x高，例如 1280x720",
+    "deploy_head_secondary": "辅助仓当前部署头，7～40 位十六进制短提交号",
     "deploy_head_server": "主仓当前部署头，7～40 位十六进制短提交号",
-    "walk_run_speed": "走/跑档速度，写成 走=<数>,跑=<数>，或一段 JSON {\"走\":<数>,\"跑\":<数>}",
     "pending_shared_tools": (
         "已改未并的公共工具，写成 名字=一句状态；名字=一句状态，"
         "或一段 JSON [{\"名字\":\"…\",\"状态\":\"…\"}]；一个都没有就写 无"
     ),
 }
-# 顶栏与 receipt 摘要上的四项：两仓部署头合成一项显示，键仍是各自独立的两个。
+# 顶栏与 receipt 摘要上的三项：项目部署头合成一项显示，键仍是各自独立的两个。
 STATE_ITEMS = (
-    ("判据图", ("judging_resolution",)),
-    ("部署头", ("deploy_head_engine", "deploy_head_server")),
-    ("走/跑", ("walk_run_speed",)),
+    ("验收图", ("evidence_resolution",)),
+    ("部署头", ("deploy_head_secondary", "deploy_head_server")),
     ("已改未并公共工具", ("pending_shared_tools",)),
 )
 STATE_RESOLUTION = re.compile(r"^(\d{2,5})[xX×](\d{2,5})$")
 STATE_COMMIT = re.compile(r"^[0-9a-fA-F]{7,40}$")
 STATE_SPLIT = re.compile(r"[;；]")
-STATE_PAIR_SPLIT = re.compile(r"[,，;；]")
 
 
 def state_text(value: Any) -> str:
     """任何一项值的一行人话；没填就是「未填」，永远不出现空白或 None。"""
     if value is None:
         return STATE_UNSET
-    if isinstance(value, dict) and "走" in value and "跑" in value:
-        return f"走{value['走']}/跑{value['跑']}"
     if isinstance(value, list):
         if not value:
             return "无"
         names = "、".join(str(row.get("名字", "")) for row in value if isinstance(row, dict))
         return f"{len(value)} 项:{names}" if names else f"{len(value)} 项"
     return str(value)
-
-
-def _state_number(text: str) -> float | int:
-    value = str(text).strip()
-    try:
-        return int(value)
-    except ValueError:
-        return float(value)
-
-
-def _parse_walk_run(raw: str) -> dict[str, Any]:
-    try:
-        loaded = json.loads(raw)
-    except json.JSONDecodeError:
-        loaded = None
-    if isinstance(loaded, dict):
-        pairs: dict[str, Any] = loaded
-    else:
-        pairs = {}
-        for chunk in STATE_PAIR_SPLIT.split(raw):
-            name, separator, number = chunk.partition("=")
-            if separator:
-                pairs[name.strip()] = number.strip()
-    try:
-        return {"走": _state_number(pairs["走"]), "跑": _state_number(pairs["跑"])}
-    except (KeyError, TypeError, ValueError) as exc:
-        raise TicketError(f"walk_run_speed 写法不对：{STATE_HELP['walk_run_speed']}。收到的是：{raw}") from exc
 
 
 def _parse_shared_tools(raw: str) -> list[dict[str, str]]:
@@ -276,17 +244,15 @@ def parse_state_value(key: str, raw: str) -> Any:
     text = str(raw).strip()
     if not text:
         raise TicketError(f"{key} 不能填空值：{STATE_HELP[key]}。要清掉一项请找{CONDUCTOR_SLOT}。")
-    if key == "judging_resolution":
+    if key == "evidence_resolution":
         matched = STATE_RESOLUTION.match(text)
         if not matched:
-            raise TicketError(f"judging_resolution 写法不对：{STATE_HELP['judging_resolution']}。收到的是：{raw}")
+            raise TicketError(f"evidence_resolution 写法不对：{STATE_HELP['evidence_resolution']}。收到的是：{raw}")
         return f"{int(matched.group(1))}x{int(matched.group(2))}"
-    if key in {"deploy_head_engine", "deploy_head_server"}:
+    if key in {"deploy_head_secondary", "deploy_head_server"}:
         if not STATE_COMMIT.match(text):
             raise TicketError(f"{key} 写法不对：{STATE_HELP[key]}。收到的是：{raw}")
         return text.lower()
-    if key == "walk_run_speed":
-        return _parse_walk_run(text)
     return _parse_shared_tools(text)
 
 
@@ -3248,7 +3214,7 @@ class TicketService:
         """
         values = self._state_raw()
         heads: set[str] = set()
-        for key in ("deploy_head_engine", "deploy_head_server"):
+        for key in ("deploy_head_secondary", "deploy_head_server"):
             row = values.get(key)
             value = row.get("值") if isinstance(row, dict) else None
             if value:
@@ -3859,7 +3825,7 @@ class TicketService:
         return dict(value) if isinstance(value, dict) else {}
 
     def state_board(self) -> dict[str, Any]:
-        """机器可读的一份当前值面：值、每项最近一次改动、还没人填的键、顶栏用的四项。"""
+        """机器可读的一份当前值面：值、每项最近一次改动、还没人填的键、顶栏用的三项。"""
         raw = self._state_raw()
         values: dict[str, Any] = {}
         changes: dict[str, Any] = {}
@@ -3947,7 +3913,7 @@ class TicketService:
     ) -> tuple[dict[str, Any], str]:
         """设计者登记实际模型，并在服务端记录本轮已开窗标记。
 
-        「实际平台」是可选的：不填就是空串，任何现有行为都不受影响。
+        「实际平台」是可选的：不填保留员工原平台,原平台也没有才记空串。
         以后要按平台看合格率（哪个窗跑什么活更容易判过），得先有人记这一格。
         """
         ticket = self.store.load_ticket(ticket_id)
@@ -3967,6 +3933,8 @@ class TicketService:
         found = self._find_staff_in(staff, assigned, str(ticket["所属总监位"]))
         if not found:  # pragma: no cover - require_active_staff 已给出人话错误
             raise TicketError(f"员工名册里没有 {assigned}。")
+        # 先取旧平台:旧名册可能借「工具/窗类型」存平台,写入模型后就取不到了。
+        platform = platform or self.staff_platform(found[1])
         found[1]["工具/窗类型"] = model
         found[1]["最近模型写回时间"] = now_text()
         ticket["实际模型"] = model
@@ -4067,6 +4035,8 @@ class TicketService:
         stats: dict[tuple[str, str], dict[str, int]] = {}
         tickets = {ticket["编号"]: ticket for ticket in self.store.list_tickets()}
         for event in self.store.read_jsonl(self.store.log_path):
+            if event.get("事件") not in {"submit", "judge-pass", "judge-rework"}:
+                continue
             ticket = tickets.get(event.get("工单号"), {})
             person = people.get(ticket.get("指派给", ""))
             model = normalize_model_name(event.get("记账模型"))
@@ -4154,14 +4124,14 @@ class TicketService:
     def _accounting_model(actual_model: Any, platform: Any) -> tuple[str, bool]:
         """记账模型键(需求-023 候选 A):按单上「实际模型」自由文本;空/待定则按员工平台记 `<平台>-未标`。
 
-        平台也没标(老记录兜底不出平台)就返回空串——调用方一律跳过记账,不猜。
+        平台也没标时用「未标平台-未标」记账,不猜平台,也不漏掉判退。
         """
         actual = normalize_model_name(actual_model)
         if actual and actual != "待定":
             return actual, False
         fallback = normalize_model_name(platform)
         if not fallback or fallback == "待定":
-            return "", False
+            fallback = "未标平台"
         return f"{fallback}-未标", True
 
     def _accounting_model_for_ticket(self, ticket: dict[str, Any]) -> tuple[str, bool]:

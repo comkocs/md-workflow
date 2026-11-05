@@ -1862,7 +1862,7 @@ class ClaimedReminderSourceTests(unittest.TestCase):
     def test_claimed_reminder_uses_the_configured_cli_path(self):
         # 四条给人照抄的命令都走同一个 CLI_PATH(位表配置里的「命令行」,正斜杠),
         # 不再写死某台机器的 Windows 路径——模板字符串里也就不会再有反斜杠被吃掉一半的事。
-        self.assertEqual(4, self.reminder.count("python ${CLI_PATH} "))
+        self.assertEqual(4, self.reminder.count("python -X utf8 ${CLI_PATH} "))
         self.assertNotRegex(self.reminder, r"[A-Za-z]:\\")
 
 
@@ -5520,6 +5520,7 @@ class BrowserWakeListTests(unittest.TestCase):
 
     def test_the_browser_wake_list_probe_passes(self):
         self.run_probe("wake-list.mjs")
+        self.run_probe("test_accounting_model.mjs")
 
     def test_the_browser_stage_counts_probe_passes(self):
         """件数条与设计者三段的数必须对得上。
@@ -7689,7 +7690,7 @@ class CurrentStateBoardTests(TicketTestCase):
     """当前值落工单台一处机器可读,各位读它不要转抄。
 
     转抄之所以会错,是因为这几个数每天都在变而抄件不会自己更新—— 就是照着
-    抄错的判据图尺寸做的,整张单作废。所以写口子只留给复检席与总编,别位一律拒。
+    抄错的验收图规格做的,整张单作废。所以写口子只留给复检席与总编,别位一律拒。
     """
 
     WRITER = "复检·合并"
@@ -7703,43 +7704,41 @@ class CurrentStateBoardTests(TicketTestCase):
 
     def test_r4_1_review_slot_and_orchestrator_may_both_write(self):
         """两个合法署名位都要真的能写,写完值落库。"""
-        first = self.service.state_set("judging_resolution", "1280x720", self.WRITER)
+        first = self.service.state_set("evidence_resolution", "1280x720", self.WRITER)
         self.assertEqual("1280x720", first["新值"])
-        second = self.service.state_set("deploy_head_engine", "C0ED7A843", "总编")
+        second = self.service.state_set("deploy_head_secondary", "C0ED7A843", "总编")
         self.assertEqual("c0ed7a843", second["新值"])
         board = self.service.state_board()
-        self.assertEqual("1280x720", board["值"]["judging_resolution"])
-        self.assertEqual("c0ed7a843", board["值"]["deploy_head_engine"])
+        self.assertEqual("1280x720", board["值"]["evidence_resolution"])
+        self.assertEqual("c0ed7a843", board["值"]["deploy_head_secondary"])
 
     def test_r4_2_other_slots_and_staff_are_refused_with_both_writers_named(self):
         """别位总监与员工一律拒,报错里两个合法署名位都要出现——不然被拒的人不知道该找谁。"""
         for actor in (SLOT, OTHER_SLOT, self.worker, "设计者", ""):
             with self.assertRaises(TicketError) as blocked:
-                self.service.state_set("judging_resolution", "1280x720", actor)
+                self.service.state_set("evidence_resolution", "1280x720", actor)
             message = str(blocked.exception)
             self.assertIn("复检·合并", message)
             self.assertIn("总编", message)
-        self.assertIsNone(self.service.state_board()["值"]["judging_resolution"])
+        self.assertIsNone(self.service.state_board()["值"]["evidence_resolution"])
 
     def test_r4_3_unknown_key_is_refused_with_every_legal_key_listed(self):
         """键不认识就拒,并且把合法键原样列全:只说「键不对」等于让人猜。"""
         with self.assertRaises(TicketError) as blocked:
             self.service.state_set("deploy_head", "c0ed7a8", "总编")
         message = str(blocked.exception)
-        for key in ("judging_resolution", "deploy_head_engine", "deploy_head_server",
-                    "walk_run_speed", "pending_shared_tools"):
+        for key in ("evidence_resolution", "deploy_head_secondary", "deploy_head_server",
+                    "pending_shared_tools"):
             self.assertIn(key, message)
 
     def test_r4_4_state_get_prints_machine_readable_json_that_matches_what_was_set(self):
         """机器可读是本单的正题:stdout 必须是干净 JSON,值要对得上。"""
-        self.service.state_set("judging_resolution", "1280x720", self.WRITER)
-        self.service.state_set("walk_run_speed", "走=1.6,跑=3.2", self.WRITER)
+        self.service.state_set("evidence_resolution", "1280x720", self.WRITER)
         self.service.state_set("pending_shared_tools", self.TOOLS, "总编")
         result = self.state_get()
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         board = json.loads(result.stdout)
-        self.assertEqual("1280x720", board["值"]["judging_resolution"])
-        self.assertEqual({"走": 1.6, "跑": 3.2}, board["值"]["walk_run_speed"])
+        self.assertEqual("1280x720", board["值"]["evidence_resolution"])
         self.assertEqual(
             [{"名字": "取图链", "状态": "已改未并,在 feat/shot 上"},
              {"名字": "ticket.py", "状态": "T-000089 待复检"}],
@@ -7759,44 +7758,42 @@ class CurrentStateBoardTests(TicketTestCase):
 
     def test_r4_5_every_set_writes_who_when_and_old_to_new_into_the_log(self):
         """一条日志要能回答:谁、何时、哪个键、旧值 → 新值。"""
-        self.service.state_set("judging_resolution", "1280x720", self.WRITER)
-        self.service.state_set("judging_resolution", "2560x1440", "总编")
+        self.service.state_set("evidence_resolution", "1280x720", self.WRITER)
+        self.service.state_set("evidence_resolution", "2560x1440", "总编")
         rows = [row for row in self.service.store.read_jsonl(self.service.store.log_path)
                 if row.get("事件") == "state-set"]
         self.assertEqual(2, len(rows))
         self.assertEqual([self.WRITER, "总编"], [row["发言人"] for row in rows])
         self.assertTrue(all(row["时间"] for row in rows))
-        self.assertEqual(["judging_resolution", "judging_resolution"], [row["值面键"] for row in rows])
+        self.assertEqual(["evidence_resolution", "evidence_resolution"], [row["值面键"] for row in rows])
         self.assertIsNone(rows[0]["旧值"])
         self.assertEqual("1280x720", rows[1]["旧值"])
         self.assertEqual("2560x1440", rows[1]["新值"])
         self.assertIn("1280x720 → 2560x1440", rows[1]["说明"])
-        latest = self.service.state_board()["最近改动"]["judging_resolution"]
+        latest = self.service.state_board()["最近改动"]["evidence_resolution"]
         self.assertEqual("总编", latest["改动人"])
         self.assertEqual("1280x720", latest["旧值"])
 
     def test_r4_6_receipt_ends_with_the_summary_and_shows_未填_for_empty_items(self):
-        """员工窗第 0 步跑 receipt 就该看见这四项;摘要必须是最后一行,空的显示「未填」。"""
+        """员工窗第 0 步跑 receipt 就该看见这三项;摘要必须是最后一行,空的显示「未填」。"""
         ticket = self.dispatch("值面摘要")
-        self.service.state_set("judging_resolution", "1280x720", self.WRITER)
+        self.service.state_set("evidence_resolution", "1280x720", self.WRITER)
         result = run_local_cli(["receipt", ticket["编号"]], self.tickets_root())
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         lines = [line for line in result.stdout.splitlines() if line.strip()]
         summary = lines[-1]
         self.assertIn("当前值面", summary)
-        self.assertIn("判据图 1280x720", summary)
-        # 没填的三项照样露面,写着「未填」——看不见的项等于逼人回去翻接管件。
+        self.assertIn("验收图 1280x720", summary)
+        # 没填的两项照样露面,写着「未填」——看不见的项等于逼人回去翻接管件。
         self.assertIn("部署头 未填/未填", summary)
-        self.assertIn("走/跑 未填", summary)
         self.assertIn("已改未并公共工具 未填", summary)
         self.assertNotIn("当前值面", "\n".join(lines[:-1]))
 
     def test_bad_values_are_refused_with_the_写法_spelled_out(self):
         """形状不对当场拒,并把该怎么写原样说出来;拒掉的不许留半个坏值。"""
         cases = {
-            "judging_resolution": "1280*720",
-            "deploy_head_engine": "头一个提交",
-            "walk_run_speed": "走=1.6",
+            "evidence_resolution": "1280*720",
+            "deploy_head_secondary": "头一个提交",
             "pending_shared_tools": "取图链",
         }
         for key, value in cases.items():
@@ -7816,7 +7813,7 @@ class CurrentStateBoardTests(TicketTestCase):
         self.assertEqual("d03bdff9f", payload["state"]["值"]["deploy_head_server"])
 
     def test_web_top_bar_reads_the_board_instead_of_transcribing_it(self):
-        """顶栏那四项必须来自服务端值面,不能是页面里另抄一份常量。"""
+        """顶栏那三项必须来自服务端值面,不能是页面里另抄一份常量。"""
         page = repository_file_or_skip(self, "tools", "browser", "index.html").read_text(encoding="utf-8")
         script = repository_file_or_skip(self, "tools", "browser", "tickets.js").read_text(encoding="utf-8")
         self.assertIn('id="stateBoard"', page)

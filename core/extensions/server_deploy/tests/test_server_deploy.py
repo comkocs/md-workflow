@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -38,6 +39,43 @@ def tearDownModule() -> None:
 
 
 class DeployScriptTests(unittest.TestCase):
+    def check_config_copy(self, script_name):
+        """真跑脚本原有配置复制分支,隔离账户、服务、证书等系统写入。"""
+        script = (HERE / script_name).read_text(encoding="utf-8")
+        lines = script.splitlines()
+        start = next(i for i, line in enumerate(lines) if line.startswith("if [[") and "desk_config.json" in line)
+        end = start
+        while not lines[end].rstrip().endswith("fi"):
+            end += 1
+        branch = "\n".join(lines[start:end + 1])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, app = root / "source", root / "app"
+            source.mkdir()
+            app.mkdir()
+            (source / "desk_config.json").write_text(json.dumps({"办公目录": "包内目录"}), encoding="utf-8")
+            target = app / "desk_config.json"
+            original = json.dumps({"办公目录": "服务器专用目录", "其他配置": "原样保留"}).encode("utf-8")
+            target.write_bytes(original)
+            environment = clean_environment(root / "tickets", SOURCE=source.as_posix(), APP=app.as_posix())
+            for exists in (True, False):
+                with self.subTest(已有配置=exists):
+                    if not exists:
+                        target.unlink()
+                    done = subprocess.run(["bash", "-c", "set -euo pipefail\n" + branch],
+                                          env=environment, capture_output=True, text=True, encoding="utf-8")
+                    self.assertEqual(0, done.returncode, done.stdout + done.stderr)
+                    expected = original if exists else (source / "desk_config.json").read_bytes()
+                    self.assertEqual(expected, target.read_bytes())
+
+    @unittest.skipUnless(shutil.which("bash"), "本机没有 bash")
+    def test_install_preserves_server_office_config(self):
+        self.check_config_copy("install.sh")
+
+    @unittest.skipUnless(shutil.which("bash"), "本机没有 bash")
+    def test_update_preserves_server_office_config(self):
+        self.check_config_copy("update.sh")
+
     def test_install_is_scoped_and_keeps_state_outside_app(self):
         script = (HERE / "install.sh").read_text(encoding="utf-8")
         # 安装目录只能落在安装根(默认 /srv)下面的独立子目录;账户名与服务名是变量,默认通用名。

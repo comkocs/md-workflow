@@ -16,6 +16,8 @@ description: 当文档改版、搬家、改名或大批改路径后,要查 md �
 - {{核对命令}}:指针核对脚本入口,在仓根跑;例:python -X utf8 core/tools/check_pointers.py
 - {{两仓根}}:私库根与办公仓根;默认自动探测,不在默认位置才用 --repo、--office 覆盖。
 
+有 `python` 用 `python`;没有时将核对命令的 `python -X utf8` 换成 `py -X utf8`,其余参数不变。
+
 ## 什么时候用
 
 - 改版、搬家、改名或大批改路径之后,要查 md 引用断了没。

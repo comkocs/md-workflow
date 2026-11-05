@@ -1,8 +1,10 @@
 # 怎么开始
 
-`python tools/tickets/ticket.py serve --open` 起本地服务并在浏览器里打开可编辑工单台（默认 `127.0.0.1:8787`）。
-命令行工位用 `python tools/tickets/ticket.py <子命令>`（本文命令都在 `<仓根>/core/` 下执行，即 `<仓根>/core/tools/tickets/ticket.py`）。
-远程部署用 `python tools/tickets/ticket.py serve --host 0.0.0.0 --token <本次令牌>`。
+以下命令有 `python` 时用 `python -X utf8`;没有时把此前缀换成 `py -X utf8`。
+
+`python -X utf8 tools/tickets/ticket.py serve --open` 起本地服务并在浏览器里打开可编辑工单台（默认 `127.0.0.1:8787`）。
+命令行工位用 `python -X utf8 tools/tickets/ticket.py <子命令>`（本文命令都在 `<仓根>/core/` 下执行，即 `<仓根>/core/tools/tickets/ticket.py`）。
+远程部署用 `python -X utf8 tools/tickets/ticket.py serve --host 0.0.0.0 --token <本次令牌>`。
 
 # 工单数据层
 
@@ -23,21 +25,34 @@ staff.json                 各位员工编号、在岗状态和经手工单
 
 位表（总监位名、复检/平台/总编排三个特殊位、只发需求的位、任务档、停用阈值、启用的扩展）来自配置文件 `core/desk_config.json`，代码里不写死；环境变量 `TICKET_DESK_CONFIG` 可指向另一份**完整**配置（整份替换，不是叠加）。默认配置的位是 前端、后端、内容、复检、平台、需求分发（只发需求）、总编。「主力模型集合」「旧版主力模型集合」「模型名册」三键已停用（需求-023）：台面不再按模型卡档，带着三键的老配置容忍但不读。
 
+缺少「办公目录」键时,默认使用 `<仓根>/_office`(即 `CORE_ROOT.parent / "_office"`),stderr 一行打印「办公目录」「默认」与实际所用路径;显式空串仍报错。服务器已有 `desk_config.json` 时安装与更新均保留整件,缺件才采用包内配置。
+
 ## 当前值面
 
 **规矩落宪法，当前值落这里一处，两处不重复存。**
 
 这几个数每天都在变。谁把它转抄进自己的接管件，抄件就再也不会自己更新——
-曾有一张单正是照着抄错的判据图尺寸做的，整张作废。所以：**读它，不要抄它。**
+曾有一张单正是照着抄错的验收图规格做的，整张作废。所以：**读它，不要抄它。**
 
-四项是什么（键即真源名）：
+三项是什么（键即真源名）：
 
 | 顶栏那一项 | 键 | 是什么 | 怎么写 |
 | --- | --- | --- | --- |
-| 判据图 | `judging_resolution` | 判据图尺寸 | `1280x720` |
-| 部署头 | `deploy_head_engine` / `deploy_head_server` | 两仓当前部署头 | 7～40 位十六进制短提交号 |
-| 走/跑 | `walk_run_speed` | 走档与跑档速度 | `走=1.6,跑=3.2`，或 JSON `{"走":1.6,"跑":3.2}` |
+| 验收图 | `evidence_resolution` | 验收图规格 | `1280x720` |
+| 部署头 | `deploy_head_secondary` / `deploy_head_server` | 主仓与辅助仓当前部署头 | 7～40 位十六进制短提交号 |
 | 已改未并公共工具 | `pending_shared_tools` | 已改未并的公共工具，一条一句状态 | `打包脚本=已改未并,在 feat/pack 上；ticket.py=T-000001 待复检`，或 JSON 列表；一个都没有写 `无` |
+
+新键名对照表(按旧项用途定位,不再接受旧键写入)：
+
+| 旧项用途 | 新键 / 处理 |
+| --- | --- |
+| 判定用截图宽高 | `evidence_resolution` |
+| 第二仓部署提交 | `deploy_head_secondary` |
+| 主仓部署提交 | `deploy_head_server`(保留) |
+| 角色移动速度 | 不再出厂,无新键 |
+| 未合并公共工具 | `pending_shared_tools`(保留) |
+
+老库中的旧键原样留存,`state get` 忽略未识别的键,不报错也不伪造新值;新项由有写权的位重新填写。
 
 谁能改：**只有复检位与总编排位**（默认配置里叫 `复检` 与 `总编`）。别位总监与员工一律拒，
 报错里会把这两个位名列出来。键不认识也拒，并把合法键全部列出来。
@@ -46,18 +61,18 @@ staff.json                 各位员工编号、在岗状态和经手工单
 各位怎么读（三条路，都是同一份值，任选一条）：
 
 ```bash
-python tools/tickets/ticket.py state get                 # 一份 JSON，给脚本读
-python tools/tickets/ticket.py receipt <一个单号>          # 最后一行就是四项摘要
+python -X utf8 tools/tickets/ticket.py state get                 # 一份 JSON，给脚本读
+python -X utf8 tools/tickets/ticket.py receipt <一个单号>          # 最后一行就是三项摘要
 ```
 
-- 网页顶栏常显这四项，鼠标悬停看这一项最近一次是谁、何时、旧值→新值改的。
+- 网页顶栏常显这三项，鼠标悬停看这一项最近一次是谁、何时、旧值→新值改的。
 - 没人填过的项，三处都显示「未填」，绝不预置假值——**工单台不替复检位填任何一个数**。
-- 员工窗第 0 步跑 `receipt` 就已经看见这四项了，不必再去翻接管件。
+- 员工窗第 0 步跑 `receipt` 就已经看见这三项了，不必再去翻接管件。
 
 改（只有那两位跑得动）：
 
 ```bash
-python tools/tickets/ticket.py state set judging_resolution 1280x720 --by 复检
+python -X utf8 tools/tickets/ticket.py state set evidence_resolution 1280x720 --by 复检
 ```
 
 服务端旧版还没上这一版时，`receipt` 不会打出摘要行（服务端不回这一格，客户端就不硬编一行空的）；
@@ -97,37 +112,37 @@ python tools/tickets/ticket.py state set judging_resolution 1280x720 --by 复检
 
 ## 「已开窗」字段
 
-「已开窗」现在保存在服务端工单上，而不是只记在某一台浏览器。设计者点【已开窗】成功后，服务端写入 `{"轮次": <当前返工次数>, "时间": <登记时间>, "实际模型": <本次模型>, "实际平台": <本次平台或空串>}`；「实际平台」可选（取值同建议窗口的四个平台名 claude/codex/vscode/zcode），不填就是空串、不影响任何现有行为，留着以后按平台看合格率。判卷判退时把字段清成 `null`，让该单立即回到设计者的「要你传达的」并提示重新开窗。判过、关闭等终态不清这个字段，保留它作为历史记录。
+「已开窗」现在保存在服务端工单上，而不是只记在某一台浏览器。设计者点【已开窗】成功后，服务端写入 `{"轮次": <当前返工次数>, "时间": <登记时间>, "实际模型": <本次模型>, "实际平台": <本次平台或空串>}`；「实际平台」可选（取值同建议窗口的四个平台名 claude/codex/vscode/zcode），不填保留员工原平台,原平台也没有才记空串，留着以后按平台看合格率。判卷判退时把字段清成 `null`，让该单立即回到设计者的「要你传达的」并提示重新开窗。判过、关闭等终态不清这个字段，保留它作为历史记录。
 
 前端先比较服务端字段的「轮次」与当前「返工次数」：相同才认作本轮已开窗；服务端明确返回 `null` 时直接认作未开窗，不再让浏览器里残留的 `deskOpened:<单号>` 把返工单藏起来。只有旧服务端或旧回落快照完全没有「已开窗」这个键时，新前端才沿用原来的 localStorage 规则。旧单读取时会在内存中补成 `null`，无需跑迁移。
 
 存量文件库可从 `log.jsonl` 倒推补齐。命令逐单顺序读取日志，取状态相对该单上一条日志发生变化的最后时间；没有有效日志则用发起时间。已有值默认不覆盖，所以可重复执行：
 
 ```powershell
-python tools/tickets/ticket.py migrate --backfill-state-time
+python -X utf8 tools/tickets/ticket.py migrate --backfill-state-time
 ```
 
 服务器 SQLite 库维护时显式指定数据库；确需重算已有值才加 `--force`：
 
 ```powershell
-python tools/tickets/ticket.py migrate --backfill-state-time --db D:/path/to/tickets.sqlite
-python tools/tickets/ticket.py migrate --backfill-state-time --db D:/path/to/tickets.sqlite --force
+python -X utf8 tools/tickets/ticket.py migrate --backfill-state-time --db D:/path/to/tickets.sqlite
+python -X utf8 tools/tickets/ticket.py migrate --backfill-state-time --db D:/path/to/tickets.sqlite --force
 ```
 
 ## 两个入口
 
-- AI 工位窗主要使用 `python tools/tickets/ticket.py <子命令>` 写单、推进状态、发言和查看未读。
-- 设计者与总编排用 `python tools/tickets/ticket.py serve --open` 起本地服务，在浏览器里阅读、答复和拍板；页面不再要求选择目录。直接打开 `file://` 时只读 `tools/browser/data/tickets-bundle.js`。
+- AI 工位窗主要使用 `python -X utf8 tools/tickets/ticket.py <子命令>` 写单、推进状态、发言和查看未读。
+- 设计者与总编排用 `python -X utf8 tools/tickets/ticket.py serve --open` 起本地服务，在浏览器里阅读、答复和拍板；页面不再要求选择目录。直接打开 `file://` 时只读 `tools/browser/data/tickets-bundle.js`。
 
 常用例子：
 
 ```powershell
-python tools/tickets/ticket.py staff new --slot 前端 --tool opus
-python tools/tickets/ticket.py new --type 派单 --slot 前端 --title "接入设置面板" --source "需求.md:设置面板" --consumer "设置页" --deliverable "web/ui/settings_panel.html" --assign "前端-01" --tier 乙 --player-facing --window codex
-python tools/tickets/ticket.py claim T-000001 --by "前端-01"
-python tools/tickets/ticket.py transfer T-000001 --to 总编 --reason "需要统一跨位验收口径" --by 前端
-python tools/tickets/ticket.py receipt T-000001
-python tools/tickets/ticket.py build
+python -X utf8 tools/tickets/ticket.py staff new --slot 前端 --tool opus
+python -X utf8 tools/tickets/ticket.py new --type 派单 --slot 前端 --title "接入设置面板" --source "需求.md:设置面板" --consumer "设置页" --deliverable "web/ui/settings_panel.html" --assign "前端-01" --tier 乙 --player-facing --window codex
+python -X utf8 tools/tickets/ticket.py claim T-000001 --by "前端-01"
+python -X utf8 tools/tickets/ticket.py transfer T-000001 --to 总编 --reason "需要统一跨位验收口径" --by 前端
+python -X utf8 tools/tickets/ticket.py receipt T-000001
+python -X utf8 tools/tickets/ticket.py build
 ```
 
 所有子命令都可在任意位置加 `--json`，供 AI 窗稳定解析。拦截失败退出码为 2，错误正文使用人话。
@@ -185,7 +200,7 @@ python tools/tickets/ticket.py build
 `--shot` 的第三种用法是 `免独图`：判语已写明“无玩家可见产出”的诊断类单，以及验证对象已退役、原命题不再成立的单，可以免掉那张独图。四条判据要同时成立才放行——状态是“实机复验过”、实机图标记是“待独图”、`--by` 署名是复检位或总编排位（默认配置里是 `复检` 或 `总编`；带两位编号的员工名也算）、`--reason` 非空。打上后实机图标记记“免独图”，原因落在字段 `免独图原因`，事件线记“免独图 · <原因>”。这条通道不要图、也不能配 `--batch`（批量是给一张图配多张单用的，豁免必须一单一原因）；“已合并”态的首次 `live` 也打不了免独图，欠图这件事得先成立。免独图的单不再计入 `list --shot-pending` 与日览的“待独图 N 张”。
 
 ```powershell
-python tools/tickets/ticket.py live T-000001 --shot 免独图 --reason "判语已写明无玩家可见产出，属诊断类单" --by "复检-01"
+python -X utf8 tools/tickets/ticket.py live T-000001 --shot 免独图 --reason "判语已写明无玩家可见产出，属诊断类单" --by "复检-01"
 ```
 
 一张图批量复验时，首张单号放在 `live` 后面，其余单号重复写 `--batch`；`--shot` 对整批生效。远程模式只上传一次图片，某张单状态不对只跳过该张，不影响其余单。
@@ -193,13 +208,13 @@ python tools/tickets/ticket.py live T-000001 --shot 免独图 --reason "判语�
 复检位可直接照抄这一条，再替换单号、图片路径和员工编号：
 
 ```powershell
-python tools/tickets/ticket.py live T-000001 "<真登录图路径>" --batch T-000002 --batch T-000003 --shot 同图 --by "复检-01"
+python -X utf8 tools/tickets/ticket.py live T-000001 "<真登录图路径>" --batch T-000002 --batch T-000003 --shot 同图 --by "复检-01"
 ```
 
 只看仍待补专属图片的工单：
 
 ```powershell
-python tools/tickets/ticket.py list --shot-pending
+python -X utf8 tools/tickets/ticket.py list --shot-pending
 ```
 
 转交沿用原工单号，派单状态不变，其他工单回到“待答”；原因不能为空，转交历史、双方未读与“今日转交”日览同步记录。拍板单新建或转给设计者时，正文必须依次写满“一、这是什么”“二、选了会怎样”“三、推荐”。总监向别位提事使用 `new --type 疑问|派单 --slot <对方位>` 或 `transfer`，不另开总监间聊天线。
@@ -214,10 +229,10 @@ python tools/tickets/ticket.py list --shot-pending
 手工停用与解禁是对称的一对，都只认设计者/总编排：
 
 ```powershell
-python tools/tickets/ticket.py staff ban --tool <模型名> --by 总编 --reason "核过责任归属,三次判退确属模型责任"
-python tools/tickets/ticket.py staff ban --tool <模型名> --slot "<总监位>" --by 总编 --reason "<一句话>"
-python tools/tickets/ticket.py staff unban --tool <模型名> --slot "<总监位>" --by 总编
-python tools/tickets/ticket.py staff unban --tool <模型名> --by 设计者
+python -X utf8 tools/tickets/ticket.py staff ban --tool <模型名> --by 总编 --reason "核过责任归属,三次判退确属模型责任"
+python -X utf8 tools/tickets/ticket.py staff ban --tool <模型名> --slot "<总监位>" --by 总编 --reason "<一句话>"
+python -X utf8 tools/tickets/ticket.py staff unban --tool <模型名> --slot "<总监位>" --by 总编
+python -X utf8 tools/tickets/ticket.py staff unban --tool <模型名> --by 设计者
 ```
 
 - 不带 `--slot` 写全项目，带 `--slot` 只停那一位；`--reason` 必填——误停一次就是那些位全部停摆，理由要留在事件线上备查。
@@ -234,8 +249,8 @@ python tools/tickets/ticket.py staff unban --tool <模型名> --by 设计者
 判语首行也必须把同一结论写给人看：`--blame 模型` 时首行以“模型责任”开头，`--blame 出题` 时首行以“出题责任”开头；两处不一致会拒绝判卷。例如：
 
 ```powershell
-python tools/tickets/ticket.py judge T-000001 --rework "实际结果不符合验收" --blame 模型 --by 前端 --verdict "模型责任：实现漏掉了验收项。"
-python tools/tickets/ticket.py judge T-000002 --rework "任务书引用了错误入口" --blame 出题 --by 前端 --verdict "出题责任：执行方已按任务书完成，但任务书入口写错。"
+python -X utf8 tools/tickets/ticket.py judge T-000001 --rework "实际结果不符合验收" --blame 模型 --by 前端 --verdict "模型责任：实现漏掉了验收项。"
+python -X utf8 tools/tickets/ticket.py judge T-000002 --rework "任务书引用了错误入口" --blame 出题 --by 前端 --verdict "出题责任：执行方已按任务书完成，但任务书入口写错。"
 ```
 
 模型记账不区分大小写，并把连续空白与下划线统一成连字符，所以 `Opus  High`、`opus high`、`opus_high` 都记成 `opus-high`；`opus`、`opus-high`、`opus-xhigh` 仍是三个互不相加的键。记账键按单上「实际模型」自由文本（需求-023 候选 A）；实际模型未填时按员工平台单记为 `<平台>-未标`，平台也没标就不记这一笔。任何模型名（名册外字符串、空）都不会挡住判退。
@@ -250,10 +265,10 @@ python tools/tickets/ticket.py judge T-000002 --rework "任务书引用了错误
 现在有两条通道：`set` 改口径，`void` 一笔勾销。两条都只认「本位总监或总编排」。
 
 ```powershell
-python tools/tickets/ticket.py set T-000001 --taskbook "<工作区>/_office/平台/任务书/T-000001_建完就改不了.md" --by 平台
-python tools/tickets/ticket.py set T-000001 --assign "平台-06" --by 总编
-python tools/tickets/ticket.py set T-000001 --window vscode --by 平台
-python tools/tickets/ticket.py void T-000001 --reason "单号猜错了，另建一张" --by 平台
+python -X utf8 tools/tickets/ticket.py set T-000001 --taskbook "<工作区>/_office/平台/任务书/T-000001_建完就改不了.md" --by 平台
+python -X utf8 tools/tickets/ticket.py set T-000001 --assign "平台-06" --by 总编
+python -X utf8 tools/tickets/ticket.py set T-000001 --window vscode --by 平台
+python -X utf8 tools/tickets/ticket.py void T-000001 --reason "单号猜错了，另建一张" --by 平台
 ```
 
 | | `set` | `void` |
@@ -286,7 +301,7 @@ python tools/tickets/ticket.py void T-000001 --reason "单号猜错了，另建�
 等于让模型替出题人背停用风险。
 
 ```powershell
-python tools/tickets/ticket.py set T-000001 --blame 出题 --reason "复核后确认是任务书判据写错，执行方照做无误" --by 前端
+python -X utf8 tools/tickets/ticket.py set T-000001 --blame 出题 --reason "复核后确认是任务书判据写错，执行方照做无误" --by 前端
 ```
 
 - 状态闸与改口径正好相反：**判过之后的单都能改，唯独「待判」拒**（待判态就该用 `judge --blame` 一次填对，不给第二条路）。
@@ -335,7 +350,7 @@ python tools/tickets/ticket.py set T-000001 --blame 出题 --reason "复核后�
 建单前猜不到单号，所以 `--taskbook` 里可以写 `{ticket}`，服务端在分配到单号之后替换成真单号：
 
 ```powershell
-python tools/tickets/ticket.py new --type 派单 --slot 前端 --title "资源清点" --source "需求.md:资源清点" --consumer "资源页" --deliverable "review/资源清点.csv" --tier 乙 --player-facing --taskbook "<工作区>/_office/前端/任务书/{ticket}_资源清点.md"
+python -X utf8 tools/tickets/ticket.py new --type 派单 --slot 前端 --title "资源清点" --source "需求.md:资源清点" --consumer "资源页" --deliverable "review/资源清点.csv" --tier 乙 --player-facing --taskbook "<工作区>/_office/前端/任务书/{ticket}_资源清点.md"
 ```
 
 分配不到单号就根本不会有这张单，库里也永远不会留下一个没替换的 `{ticket}`。
@@ -397,7 +412,7 @@ python tools/tickets/ticket.py new --type 派单 --slot 前端 --title "资源�
 
 设计者点【已唤醒】存的是「点的那一刻最新未读的时间戳」，不是布尔值：来了更新的通知，那一位会**重新冒出来**。
 CLI 的 `new` 和 `set --taskbook` 成功后会打印与卡片完全相同的三行开窗指令；三行由服务端统一生成。路径为空时只打印补路径提醒，不会拼出半截指令。
-第三行写「在 <办公目录> 下新开线程」：目录只取配置文件（`core/desk_config.json`，或 `TICKET_DESK_CONFIG` 指向的那份）的必填键「办公目录」，代码里不写字面值；缺键或空串开库就报错。`ticket.py -h`、`new -h`、`set -h` 末尾都印着它取自哪份配置、当前值是什么。远程模式下三行由服务端生成，以服务端那份配置为准。
+第三行写「在 <办公目录> 下新开线程」：目录只取配置文件（`core/desk_config.json`，或 `TICKET_DESK_CONFIG` 指向的那份）的键「办公目录」，代码里不写字面值；缺少该键时默认使用 `<仓根>/_office` 开库并在 stderr 提示一行，显式空串仍报错。`ticket.py -h`、`new -h`、`set -h` 末尾都印着它取自哪份配置、当前值是什么。远程模式下三行由服务端生成，以服务端那份配置为准。
 
 ### `running`：在跑窗口列表
 
@@ -431,7 +446,7 @@ CLI 的 `new` 和 `set --taskbook` 成功后会打印与卡片完全相同的三
 
 ## 员工窗怎么接通道
 
-1. 开工第一句先自检：`python tools/tickets/ticket.py env` —— 一行告诉你现在是本机还是远程、连哪台、令牌文件在不在、配置从哪一级取到。
+1. 开工第一句先自检：`python -X utf8 tools/tickets/ticket.py env` —— 一行告诉你现在是本机还是远程、连哪台、令牌文件在不在、配置从哪一级取到。
 2. 零配置：总监发的 `remote.env` 放在 `<仓上一级>/tasks/tickets/remote.env`（从仓根往上逐级推算，正式仓与 `_work/` 下的 worktree 都能找到）就自动接上；不在那儿就 `export TICKET_ENV=<remote.env 的正斜杠路径>`。
 3. 接上后 `receipt <一个已知单号>` 能打出真标题才算连着服务器；`env` 显示「本机模式」时做的活推不动工单，先接通道再干。
 
@@ -480,7 +495,7 @@ Get-Content <仓上一级>/tasks/tickets/remote.env | ForEach-Object { if ($_ -m
 **开工第一件事：先跑一次 receipt 核通道。**
 
 ```powershell
-python tools/tickets/ticket.py receipt T-000001
+python -X utf8 tools/tickets/ticket.py receipt T-000001
 ```
 
 拿一个你确定服务器上有的单号去 receipt。能打出这张单的标题和状态，说明你这一条命令
@@ -511,7 +526,7 @@ python tools/tickets/ticket.py receipt T-000001
 `receipt` 会在回执末尾同时显示客户端与服务端协议；两者不同时，还会明确提醒新开关可能被降级或拦下。
 
 普通 `env` 永远不出网、不碰工单库，也不读取令牌内容，只显示客户端协议，并提示用 `--probe` 才查服务端。
-只有显式执行 `python tools/tickets/ticket.py env --probe` 时才会发起一次探测；探测失败只显示
+只有显式执行 `python -X utf8 tools/tickets/ticket.py env --probe` 时才会发起一次探测；探测失败只显示
 `服务端版本没查到:<原因>`，不改变 `env` 原有的成功退出规则。
 
 `DEGRADABLE_OPTIONS` 是安全降级白名单，只能放“省掉后不改变工单内容”的优化开关。
@@ -656,7 +671,7 @@ sudo bash extensions/server_deploy/update.sh --source /srv/ticket-desk/checkout
 这与 `close --not-merged` 是同一个缺口的两半:那边「这活到此为止」(终态),这边「这活还要接着做、单号要留住」。
 
 ```bash
-python tools/tickets/ticket.py rework T-xxxxxx --reason "设计者当面否了这一批的画" --by 复检
+python -X utf8 tools/tickets/ticket.py rework T-xxxxxx --reason "设计者当面否了这一批的画" --by 复检
 ```
 
 - **受理态只有「待复检」**;待判的仍走 `judge --rework`。不去放开 judge 的受理态——judge 是「判卷」那个动作,
@@ -699,17 +714,17 @@ python tools/tickets/ticket.py rework T-xxxxxx --reason "设计者当面否了�
 
 ```bash
 # ① 名册记「固定工位」与记忆 md 路径。只有该员工所属的总监位或总编排能落笔。
-python tools/tickets/ticket.py staff fix 后端-04 \
+python -X utf8 tools/tickets/ticket.py staff fix 后端-04 \
     --memory "<工作区>/_office/后端/工位记忆/后端-04.md" --by 后端
-python tools/tickets/ticket.py staff unfix 后端-04 --by 后端   # 取消标记，路径保留便于回看
+python -X utf8 tools/tickets/ticket.py staff unfix 后端-04 --by 后端   # 取消标记，路径保留便于回看
 
 # ② 从这位**已交板**的单生成/重刷记忆 md。
-python tools/tickets/ticket.py memory export --staff 后端-04 [--out <路径>] [--max-lines 400]
+python -X utf8 tools/tickets/ticket.py memory export --staff 后端-04 [--out <路径>] [--max-lines 400]
 
 # ③ 交板留「给下一窗」；判卷人可以把写错的行划掉。
-python tools/tickets/ticket.py submit T-xxxxxx --evidence … --handoff "这条链的真源在 X
+python -X utf8 tools/tickets/ticket.py submit T-xxxxxx --evidence … --handoff "这条链的真源在 X
 Y 那个数是错的,别信"
-python tools/tickets/ticket.py judge T-xxxxxx --pass --by <位名> --verdict … --strike-handoff "2"
+python -X utf8 tools/tickets/ticket.py judge T-xxxxxx --pass --by <位名> --verdict … --strike-handoff "2"
 ```
 
 **路径约定**：`<工作区>/_office/<位名>/工位记忆/<位名-编号>.md`。工具**不**替人建目录、也**不**校验文件必须已存在——记忆件是 `memory export` 生成的，先有标记才有第一次导出；`staff fix` 时父目录不在只提醒一句，不拦。`staff list` 会在固定工位后面打一个 `· 固定工位`。
@@ -730,7 +745,9 @@ python tools/tickets/ticket.py judge T-xxxxxx --pass --by <位名> --verdict …
 
 ## 导出任务书
 
-- 新工单一律进入数据根（默认仓内 `core/data/`）。导出到指定文件用 `python tools/tickets/ticket.py export T-xxxxxx --out "<目标目录>/任务书.md"`；远程模式下由客户端取得工单后在本机写文件，不依赖服务器上的 Windows 路径。
+- 新工单一律进入数据根（默认仓内 `core/data/`）。导出到指定文件用 `python -X utf8 tools/tickets/ticket.py export T-xxxxxx --out "<目标目录>/任务书.md"`；远程模式下由客户端取得工单后在本机写文件，不依赖服务器上的 Windows 路径。
 - 不写 `--out` 时默认落到 `_office/<所属总监位>/任务书/T-xxxxxx_<主题>.md`；标题里的 `< > : " / \\ | ? *` 与控制字符会替换为 `-`。旧参数 `--inbox codex|codely|dsh` 已废弃，使用时会明确报错并提示改用 `--out`。
 
 数据根里的工单图片与 JSON 永不进入 Git（默认数据根 `core/data/` 已由 `core/.gitignore` 排除）。网页回落 bundle 是本机生成物，也由 `.gitignore` 排除。
+
+实际模型为空或待定时按 `<平台>-未标` 记账;平台也缺失则记 `未标平台-未标`,不跳过模型责任判退与停用线通知。

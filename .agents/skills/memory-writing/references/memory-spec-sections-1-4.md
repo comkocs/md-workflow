@@ -91,6 +91,7 @@ metadata:
 python -c "import io;print(len(io.open(r'<记忆目录>/MEMORY.md',encoding='utf-8').read()))"
 ```
 
+- 有 `python` 用 `python`;没有时将量法命令开头的 `python` 换成 `py -X utf8`,其余参数不变。
 - `wc -c` 是字节数:中文为主的索引,字节约是字符的 1.6~1.7 倍,会把没超的误报成超了。
 - `wc -m` 在 C locale 下(Git Bash 里 LANG / LC_ALL 为空时常见)会退化成字节数,**不可信**。
 - 按字节算阈值的自动提醒一律不作数,只认上面这条量法。

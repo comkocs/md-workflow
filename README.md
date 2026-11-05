@@ -44,7 +44,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### ⭐ `context-guard-hooks` — Memory hooks
 
-**Category: Requires `core/`.** Install and check two advisory hooks: a post-write check for stale wording, fixed versions, size limits, or missing charter sections, and a post-compaction reinjection of saved state. Reinjection works with `/compact`: `SessionStart(compact)` triggers it after manual `/compact` or automatic compaction. The hooks only report context; they neither block edits nor save missing state for you. The skill explains configuration merging, manual JSON checks, source identification, and the limits of a tools-only installation.
+**Category: Requires `core/`.** Install and check two advisory hooks: a post-write check for stale wording, fixed versions, size limits, or missing charter sections, and a post-compaction reinjection of saved state. Reinjection works with `/compact`: `SessionStart(compact)` triggers it after manual `/compact` or automatic compaction. These two hooks only report context; they neither block edits nor save missing state for you. A third hook, `危险命令拦.py`, blocks four dangerous Bash command forms and returns an alternative command. The skill explains configuration merging, manual JSON checks, source identification, and the limits of a tools-only installation.
 
 ### ⭐ `ticket-desk-usage` — Ticket desk usage
 
@@ -64,7 +64,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### `first-window-requirements` — First-window requirements
 
-**Category: Standalone.** Before creating a new project repository, collect the user's requirements verbatim; distill ten questions to fill a requirements card, set the tier by the ruler, trim out the working rules, and select a preset; and confirm a mind map, product document, and either a UI prototype or architecture diagram. Then split the agreed scope into modules and tasks and fill in coding standards, with asset-management rules only when relevant. The required skeletons are included; incomplete requirements evidence is not a reason to invent features or create the repository early.
+**Category: Standalone.** Before creating a new project repository, collect the user's requirements verbatim; distill ten questions to fill a requirements card, set the tier by the ruler, trim out the working rules, and select a preset; and confirm a mind map, product document, and either a UI prototype or architecture diagram. Then split the agreed scope into modules and tasks and fill in coding standards, with asset-management rules only when relevant. The required skeletons are included; also copy `desk/真源/` alongside the skill. Incomplete requirements evidence is not a reason to invent features or create the repository early.
 
 ### `legacy-project-onboarding` — Legacy-project onboarding
 
@@ -76,7 +76,7 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 ### `zero-window-taskbook-drafting` — Optional two-window task brief
 
-**Category: Full workflow required.** Use this only when a large task needs a separate executor window because of merge conflicts or cross-repository work. It checks the five-block brief, baseline, file whitelist, handoff, audit, and deviation requirements before the independent executor starts. The default single-window route uses `short-book-drafting`; task size alone does not require a second window.
+**Category: Full workflow required.** Use this only when a large task meets any fallback trigger in Constitution §0.1 and needs a separate executor window. It checks the five-block brief, baseline, file whitelist, handoff, audit, and deviation requirements before the independent executor starts. The default single-window route uses `short-book-drafting`; task size alone does not require a second window.
 
 ### `contract-and-test-infra` — Contracts and test infrastructure
 
@@ -130,15 +130,15 @@ Clone https://github.com/comkocs/md-workflow into a temporary directory, copy it
 
 Start with saved state, not a larger transcript. Keep one fixed-name `接管_现状.md`: section §一 describes what is true now, what is blocked, which agents are active, and what happens next; section §二 lists stable source paths and commands. Rewrite the current state rather than appending a diary, keep history in archives, and verify the pointers before handing off. Each reply distinguishes a real memory save from an unchanged memory state; see [`pointer-handoff`](.agents/skills/pointer-handoff/SKILL.md).
 
-The two hooks in `core/tools/hooks/` are complementary. `防回潮检查.py` is an advisory `PostToolUse` check after `Write|Edit|MultiEdit`; `压缩后回灌.py` works with `/compact` and is triggered by `SessionStart(compact)` after manual `/compact` or automatic compaction. It reinjects the saved current-state section, current daily rules, and recently active subagents; if it cannot identify the role, it supplies only the daily rules. Save the state before compaction: a hook cannot recover facts that were never written down.
+The three hooks in `core/tools/hooks/` are complementary. The third, `危险命令拦.py`, runs on `PreToolUse(Bash)` and blocks `rm -rf`, `git reset --hard`, force-pushes (`--force` / `-f`) to main, and `git worktree remove --force`, returning a runnable alternative command. `防回潮检查.py` is an advisory `PostToolUse` check after `Write|Edit|MultiEdit`; `压缩后回灌.py` works with `/compact` and is triggered by `SessionStart(compact)` after manual `/compact` or automatic compaction. It reinjects the saved current-state section, current daily rules, and recently active subagents; if it cannot identify the role, it supplies only the daily rules. Save the state before compaction: a hook cannot recover facts that were never written down.
 
-Both scripts use the standard library and only emit guidance, not edit blocks. Follow [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) to merge event configuration without replacing existing settings and to check the actual reinjection sources. Preserve three things in a compact summary: decisions with timestamps, cross-window values and time windows, and active agents with what they are waiting for and what to do when they return. A zero exit code or no output alone does not prove installation succeeded; in a `core/`-only setup, checks needing an absent workflow word list or budget table are skipped.
+All three scripts use the standard library. The two memory hooks only emit guidance, not edit blocks; the third blocks the four dangerous Bash command forms above. Follow [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) to merge event configuration without replacing existing settings and to check the actual reinjection sources. Preserve three things in a compact summary: decisions with timestamps, cross-window values and time windows, and active agents with what they are waiting for and what to do when they return. A zero exit code or no output alone does not prove installation succeeded; in a `core/`-only setup, checks needing an absent workflow word list or budget table are skipped.
 
 ## ⭐ Standalone: ticket desk and runtime dashboard
 
 To use the ticket desk and runtime dashboard without the constitution, copy just the `core/` directory into a tools directory of your choice and change the `办公目录` key in `core/desk_config.json` to your own office-document directory, which need not exist yet. These tools use only Python's standard library; `desk/`, `.agents/`, and the workflow constitution are not prerequisites. Install any selected skills separately using the method above.
 
-Run these commands from the directory containing the copied `core/`:
+Run these commands from the directory containing the copied `core/`. Use `python` when available; otherwise replace `python -X utf8` with `py -X utf8`, keeping all other arguments (including `-I`) unchanged:
 
 ```bash
 python -X utf8 core/start.py
@@ -224,7 +224,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### ⭐ `context-guard-hooks` — 记忆钩子
 
-**分类：装 core/ 即可用。** 安装并自查两道提示钩子：写文件后检查旧词、写死版本、体积超限或章程缺节，压缩后回灌已保存的现状。回灌配合 `/compact` 使用，手动 `/compact` 或自动压缩后由 `SessionStart(compact)` 触发。钩子只提示，不拦截编辑，也不会替你保存缺失的现状。skill 讲清配置合并、JSON 手动自查、来源识别与只装工具时的能力边界。
+**分类：装 core/ 即可用。** 安装并自查两道提示钩子：写文件后检查旧词、写死版本、体积超限或章程缺节，压缩后回灌已保存的现状。回灌配合 `/compact` 使用，手动 `/compact` 或自动压缩后由 `SessionStart(compact)` 触发。这两道钩子只提示，不拦截编辑，也不会替你保存缺失的现状。第三道 `危险命令拦.py` 会拦四种危险 Bash 命令并回替代命令。skill 讲清配置合并、JSON 手动自查、来源识别与只装工具时的能力边界。
 
 ### ⭐ `ticket-desk-usage` — 工单台用法
 
@@ -244,7 +244,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### `first-window-requirements` — 首次需求对接
 
-**分类：单独装即可用。** 新项目建仓前，先逐字收需求、归纳十题填需求卡、按尺子判档、裁出作业规矩、选预设，再确认思维导图、产品文档与原型图或架构图。确认后把范围拆成模块与单，填好代码规范，有相关素材时才补素材管理规范。所需骨架自带；证据不齐不能靠编功能或提前建仓补过去。
+**分类：单独装即可用。** 新项目建仓前，先逐字收需求、归纳十题填需求卡、按尺子判档、裁出作业规矩、选预设，再确认思维导图、产品文档与原型图或架构图。确认后把范围拆成模块与单，填好代码规范，有相关素材时才补素材管理规范。所需骨架自带；需同时拷 `desk/真源/`；证据不齐不能靠编功能或提前建仓补过去。
 
 ### `legacy-project-onboarding` — 老项目接入
 
@@ -256,7 +256,7 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 ### `zero-window-taskbook-drafting` — 0 号任务书起草（选用，仅双窗）
 
-**分类：需要 md-workflow 全套。** 只在甲类大型因并线冲突或跨仓而需要独立执行员窗时使用。开工前核五块短书、底数、文件白名单、交接、审计与偏离要求。默认单窗走 `short-book-drafting`，不能只因任务大就另开第二窗。
+**分类：需要 md-workflow 全套。** 只在甲类大型触发宪法 0.1 回退线任一条、需要独立执行员窗时使用。开工前核五块短书、底数、文件白名单、交接、审计与偏离要求。默认单窗走 `short-book-drafting`，不能只因任务大就另开第二窗。
 
 ### `contract-and-test-infra` — 前后端契约与测试基建
 
@@ -310,15 +310,15 @@ md-workflow v2.0 包含宪法 14 闸减法版、首次需求对接窗、四档�
 
 先保存现状，不靠更长的聊天记录。固定一份 `接管_现状.md`：§一 写此刻实情、阻塞、在跑代理与下一步；§二 列稳定真源路径和命令。现状覆盖式重写而不是追加日记，历史进归档，交接前核指针。每次回复分清真存了记忆还是记忆未动，见 [`pointer-handoff`](.agents/skills/pointer-handoff/SKILL.md)。
 
-`core/tools/hooks/` 两道钩子各管一件事。`防回潮检查.py` 在 `Write|Edit|MultiEdit` 后由 `PostToolUse` 提示；`压缩后回灌.py` 配合 `/compact`，手动 `/compact` 或自动压缩后由 `SessionStart(compact)` 触发。回灌已存现状节、当日口径与近期仍在跑的子代理，认不出本位时只给当日口径。压缩前先保存，没写下来的事实不能靠钩子找回来。
+`core/tools/hooks/` 三道钩子各管一件事。第三道 `危险命令拦.py` 在 `PreToolUse(Bash)` 拦截 `rm -rf`、`git reset --hard`、强推（`--force` / `-f`）到 main、`git worktree remove --force`，拒时回一行可直接跑的替代命令。`防回潮检查.py` 在 `Write|Edit|MultiEdit` 后由 `PostToolUse` 提示；`压缩后回灌.py` 配合 `/compact`，手动 `/compact` 或自动压缩后由 `SessionStart(compact)` 触发。回灌已存现状节、当日口径与近期仍在跑的子代理，认不出本位时只给当日口径。压缩前先保存，没写下来的事实不能靠钩子找回来。
 
-两脚本只用标准库，只输出提示，不拦截编辑。按 [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) 合并事件配置、保留原设置并核实际回灌来源。压缩摘要保住三样：带时刻的拍板、跨窗数值与时段、在跑代理及其等待项和返回动作。退出码为零或没有输出都不能单独证明安装成功；只装 `core/` 时，需要外置流程词表或预算表的检查会跳过。
+三脚本只用标准库；两道记忆钩子只输出提示、不拦截编辑，第三道会拦截上述四种危险 Bash 命令。按 [`context-guard-hooks`](.agents/skills/context-guard-hooks/SKILL.md) 合并事件配置、保留原设置并核实际回灌来源。压缩摘要保住三样：带时刻的拍板、跨窗数值与时段、在跑代理及其等待项和返回动作。退出码为零或没有输出都不能单独证明安装成功；只装 `core/` 时，需要外置流程词表或预算表的检查会跳过。
 
 ## ⭐ 单独安装：工单台与运行看板
 
 不装宪法也能用工单台与运行看板：只拷 `core/` 一个目录到自己选的工具目录，把 `core/desk_config.json` 的「办公目录」改成自己的办公文件目录，该目录可以尚不存在。工具只用 Python 标准库，不依赖 `desk/`、`.agents/` 或工作流宪法。要用的 skill 按上文另装。
 
-在所拷 `core/` 的父目录运行：
+在所拷 `core/` 的父目录运行。有 `python` 用 `python`；没有时将 `python -X utf8` 换成 `py -X utf8`，其余参数（含 `-I`）不变：
 
 ```bash
 python -X utf8 core/start.py

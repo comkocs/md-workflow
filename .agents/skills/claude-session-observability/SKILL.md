@@ -15,6 +15,8 @@ description: 当要看本机各窗口与子孙代理在跑什么、并发几路�
 
 - {{看板启动命令}}:起运行看板的命令,在仓根跑;例:python -X utf8 core/tools/dashboard/server.py(隔离模式再加 -I,两种起法行为一致)。
 
+有 `python` 用 `python`;没有时将启动命令的 `python -X utf8` 换成 `py -X utf8`,其余参数(含 `-I`)不变。
+
 ## 什么时候用
 
 - 开工或中途要看现在有几扇窗、几个子孙代理在跑,有没有卡住或空转。

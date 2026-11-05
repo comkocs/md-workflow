@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -305,6 +306,44 @@ class HookTests(unittest.TestCase):
         for 事件 in ({}, "{", {"transcript_path": "无.jsonl"}):
             with self.subTest(事件=事件):
                 self.assertEqual(self.contents(self.run_hook(回灌, 事件)), {1: "无当日口径"})
+
+
+class LauncherTests(unittest.TestCase):
+    def check_launcher(self, 有python):
+        bash = shutil.which("bash")
+        self.assertIsNotNone(bash, "启动壳自核需要 Bash")
+        with tempfile.TemporaryDirectory(prefix="hook-launcher-") as 临时:
+            根 = Path(临时)
+            程序 = 根 / "bin"
+            程序.mkdir()
+            # 受控 PATH：替身记录解释器与参数，再用真实解释器运行只读探针。
+            for 名 in (("python", "py") if 有python else ("py",)):
+                替身 = 程序 / 名
+                替身.write_bytes(("#!/bin/sh\nprintf '%s\\n' " + shlex.quote(名)
+                                 + " \"$@\"\nexec " + shlex.quote(sys.executable.replace("\\", "/"))
+                                 + " \"$@\"\n").encode("utf-8"))
+                替身.chmod(0o755)
+            探针 = 根 / "含 空格探针.py"
+            探针.write_bytes(('import sys\nprint(sys.stdin.read())\nprint(sys.argv[1])\n'
+                            'print(sys.flags.utf8_mode, sys.flags.isolated)\n').encode("utf-8"))
+            路径 = 程序.as_posix()
+            if os.name == "nt":
+                路径 = "/" + 路径[0].lower() + 路径[2:]
+            结果 = subprocess.run(
+                [bash, "-c", 'PATH="$1"; export PATH; source "$2" "$3" "$4"', "兜底自核",
+                 路径, str(脚本目录 / "启动钩子.sh"), str(探针), "中文参数"],
+                input="中文输入".encode("utf-8"), capture_output=True, timeout=10)
+            self.assertEqual(结果.returncode, 0, 结果.stderr.decode("utf-8", "replace"))
+            self.assertEqual(结果.stderr, b"")
+            行 = 结果.stdout.decode("utf-8").splitlines()
+            self.assertEqual(行[:5], ["python" if 有python else "py", "-X", "utf8", "-I", str(探针)])
+            self.assertEqual(行[5:], ["中文参数", "中文输入", "中文参数", "1 1"])
+
+    def test_兜底_有python优先(self):
+        self.check_launcher(True)
+
+    def test_兜底_只有py(self):
+        self.check_launcher(False)
 
 
 if __name__ == "__main__":

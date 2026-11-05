@@ -5,6 +5,7 @@
     python core/start.py --demo       演示台面:数据在 core/demo-data/,端口 8788;目录为空时先播种再起
     python core/start.py --port 9000  换端口
 
+有 python 用 python;没有时将命令开头的 python 换成 py -X utf8,其余参数不变。
 只用 Python 标准库。Ctrl+C 停服务。
 命令行读写同一份数据用 core/t.py(见仓根 README「起工单台」)。
 上服务器(方式乙:SQLite 库 + 证书 + 登录)不走这里,见 core/extensions/server_deploy/上服清单.md。

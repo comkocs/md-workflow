@@ -9,6 +9,7 @@
   python -X utf8 -c "import io,sys;print(len(io.open(sys.argv[1],encoding='utf-8').read()))" "<文件路径>"
   ```
 
+- 有 `python` 用 `python`;没有时将量法命令的 `python -X utf8` 换成 `py -X utf8`,其余参数不变。
 - 由执行窗派子代理起草,执行窗只核:哈希用 git 核、数字用命令核、文件名用列目录核(见本 skill `references/closeout-steps.md` 第 2、9 步)。
 - 落 `{{章程目录}}/<位名>/回执/<单号>_收口报告.md`。
 - 丙档不交收口报告,只回一行回执(见本 skill `references/closeout-report-template.md`「回执只一行」)。

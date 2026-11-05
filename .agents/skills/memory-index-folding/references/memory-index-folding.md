@@ -6,6 +6,8 @@
 
 写一条新记忆、给索引加一行不在本文,见 memory-writing skill。
 
+有 `python` 用 `python`;没有时将命令开头的 `python` 换成 `py -X utf8`,其余参数不变。
+
 ## 一、判要不要折
 
 1. 量字符数:只用 python 按 UTF-8 读取后取长度;`wc -c`、`wc -m` 和按字节喊超限的自动提醒都不作数。细节见 `desk/memory/规范.md` 的「§4 索引 MEMORY.md」量法。

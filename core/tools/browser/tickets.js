@@ -23,8 +23,8 @@ const DECISION_TEMPLATE = "一、这是什么\n\n二、选了会怎样\n\n三、
 const STALE_STATE_HOURS = {新建:24,已认领:8,返工:8,待判:4,待复检:8,已合并:24,待答:24};
 const NON_STALE_STATES = new Set(["关闭","作废","实机复验过","阻塞"]);
 // 当前值面顶栏：标签与服务端 service.py STATE_ITEMS 同步修改。
-// 这份只在服务端没回值面时兜底，保证四项永远看得见「未填」，不会是空白或 undefined。
-const STATE_ITEMS = ["判据图","部署头","走/跑","已改未并公共工具"];
+// 这份只在服务端没回值面时兜底，保证三项永远看得见「未填」，不会是空白或 undefined。
+const STATE_ITEMS = ["验收图","部署头","已改未并公共工具"];
 const STATE_UNSET = "未填";
 const DB_NAME = "ticket-desk", HANDLE_KEY = "ticketsRoot";
 const API_MODE = ["http:","https:"].includes(location.protocol);
@@ -942,8 +942,10 @@ function handoffPrompt(){return prompt("留给下一窗（可不填）：只写�
 function strikePrompt(ticket){const rows=(ticket.留给下一窗||{}).行||[];if(!rows.length)return "";
   return prompt(`执行方留给下一窗这几行；写错的填行号（逗号分隔），没有就留空：\n${rows.map((r,i)=>`${i+1}. ${r.文字}${r.划掉判卷人?`（已被 ${r.划掉判卷人} 划掉）`:''}`).join('\n')}`,"")||""}
 function strictNotice(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给),first=member&&(member.经手工单号列表||[]).length<=1;return first||[TIER_MID,TIER_LOW].includes(ticket.任务档||TIER_MID)?'首检从严:逐行核,自己重跑验证命令':'判卷检查：'}
-async function recordWebRework(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给);if(!member)return;const model=String(ticket.实际模型||platformOf(member)||'').toLowerCase();if(!model||model==='待定')return;const staff=app.data.staff,score=(staff.模型记分||={})[model]||((staff.模型记分)[model]={合计:0});score[ticket.所属总监位]=Number(score[ticket.所属总监位]||0)+1;score.合计=Number(score.合计||0)+1;const limits=app.data.slots.停用阈值||{同位:3,全项目:5},bans=staff.模型停用||={全项目:[],按位:{}};(bans.按位[ticket.所属总监位]||=[]);if(score[ticket.所属总监位]>=limits.同位&&!bans.按位[ticket.所属总监位].includes(model))bans.按位[ticket.所属总监位].push(model);if(score.合计>=limits.全项目&&!bans.全项目.includes(model))bans.全项目.push(model);await writeJson(app.handle,'staff.json',staff)}
-function modelStats(){if(app.data.modelStats?.length)return app.data.modelStats;const people={};Object.entries(app.data.staff?.总监位||{}).forEach(([slot,g])=>(g.员工||[]).forEach(m=>people[m.员工名]={slot,model:platformOf(m)}));const stats={};(app.data.log||[]).forEach(e=>{const t=(app.data.items||[]).find(x=>x.编号===e.工单号),p=t&&people[t.指派给];const actual=String(e.实际模型||t?.实际模型||'').toLowerCase(),platform=String(p?.model||'').toLowerCase();const model=actual&&actual!=='待定'?actual:(platform?platform+'-未标':'');if(!model)return;const r=stats[model]||=( {交板数:0,判过:0,判退:0} );if(e.事件==='submit')r.交板数++;if(e.事件==='judge-pass')r.判过++;if(e.事件==='judge-rework')r.判退++});const bans=app.data.staff?.模型停用||{全项目:[],按位:{}};return Object.entries(stats).map(([模型,r])=>{const n=r.判过+r.判退;return{模型,...r,合格率:n?`${(r.判过*100/n).toFixed(1)}%`:'—',状态:bans.全项目.includes(模型)?'全项目停用':Object.values(bans.按位||{}).some(v=>v.includes(模型))?'本位停用':'可用'}})}
+// 与服务端记账键同形:实际模型优先,缺模型用平台未标,两者都缺也不得漏账。
+function accountingModel(actualModel,platform){const normalize=value=>String(value||'').trim().toLowerCase().replace(/[\s_]+/g,'-');const actual=normalize(actualModel);if(actual&&actual!=='待定')return actual;const fallback=normalize(platform);return `${fallback&&fallback!=='待定'?fallback:'未标平台'}-未标`;}
+async function recordWebRework(ticket){const member=staffFor(ticket.所属总监位).find(m=>m.员工名===ticket.指派给);if(!member)return;const model=accountingModel(ticket.实际模型,platformOf(member));const staff=app.data.staff,score=(staff.模型记分||={})[model]||((staff.模型记分)[model]={合计:0});score[ticket.所属总监位]=Number(score[ticket.所属总监位]||0)+1;score.合计=Number(score.合计||0)+1;const limits=app.data.slots.停用阈值||{同位:3,全项目:5},bans=staff.模型停用||={全项目:[],按位:{}};(bans.按位[ticket.所属总监位]||=[]);if(score[ticket.所属总监位]>=limits.同位&&!bans.按位[ticket.所属总监位].includes(model))bans.按位[ticket.所属总监位].push(model);if(score.合计>=limits.全项目&&!bans.全项目.includes(model))bans.全项目.push(model);await writeJson(app.handle,'staff.json',staff)}
+function modelStats(){if(app.data.modelStats?.length)return app.data.modelStats;const people={};Object.entries(app.data.staff?.总监位||{}).forEach(([slot,g])=>(g.员工||[]).forEach(m=>people[m.员工名]={slot,model:platformOf(m)}));const stats={};(app.data.log||[]).forEach(e=>{if(!['submit','judge-pass','judge-rework'].includes(e.事件))return;const t=(app.data.items||[]).find(x=>x.编号===e.工单号),p=t&&people[t.指派给];const actual=String(e.实际模型||t?.实际模型||'').toLowerCase(),platform=String(p?.model||'').toLowerCase();const model=accountingModel(actual,platform);if(!model)return;const r=stats[model]||=( {交板数:0,判过:0,判退:0} );if(e.事件==='submit')r.交板数++;if(e.事件==='judge-pass')r.判过++;if(e.事件==='judge-rework')r.判退++});const bans=app.data.staff?.模型停用||{全项目:[],按位:{}};return Object.entries(stats).map(([模型,r])=>{const n=r.判过+r.判退;return{模型,...r,合格率:n?`${(r.判过*100/n).toFixed(1)}%`:'—',状态:bans.全项目.includes(模型)?'全项目停用':Object.values(bans.按位||{}).some(v=>v.includes(模型))?'本位停用':'可用'}})}
 /* 答复与发送对话线都要等服务器往返,设计者反映每次点击要卡至少 10 秒,
    没有反馈就会忍不住再点,而重复提交会真发出两条。
    点下去立刻置灰并倒数 15 秒;失败则马上解禁,好让人重试。
@@ -1038,11 +1040,12 @@ document.addEventListener('click',async event=>{
       /* 单子停在「新建」而设计者已开过窗:该催的是员工窗,而且要点名让它先认领,
          否则它做完了单子还是停在新建,谁也看不出来。 */
       const text=t.状态==="已认领"
-        ?`先核通道:python ${CLI_PATH} receipt ${t.编号}
+        ?`没有 python 时,把下列 python -X utf8 换成 py -X utf8。
+先核通道:python -X utf8 ${CLI_PATH} receipt ${t.编号}
 ${t.非玩家可感知
-  ?`交板:python ${CLI_PATH} submit ${t.编号} --verify-command "<你跑的验证命令>" --raw-output "<原样粘贴输出>"`
-  :`附图(选填):python ${CLI_PATH} attach ${t.编号} <真登录图路径> --origin world --by ${t.指派给||"<指派给>"}
-交板:python ${CLI_PATH} submit ${t.编号} --evidence "<玩家怎么打开它>"`}
+  ?`交板:python -X utf8 ${CLI_PATH} submit ${t.编号} --verify-command "<你跑的验证命令>" --raw-output "<原样粘贴输出>"`
+  :`附图(选填):python -X utf8 ${CLI_PATH} attach ${t.编号} <真登录图路径> --origin world --by ${t.指派给||"<指派给>"}
+交板:python -X utf8 ${CLI_PATH} submit ${t.编号} --evidence "<玩家怎么打开它>"`}
 交付项要在提交端本机真实存在,少一个都交不了板;交完只回一行『已进入工单 ${t.编号} · 标题 · 状态』。`
         :(t.状态==="新建"&&isOpened(t))
           ?`查收工单

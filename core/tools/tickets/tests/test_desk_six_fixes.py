@@ -160,6 +160,10 @@ def test_slot_add_duplicate_is_refused_without_modifying_config(tmp_path, config
     ["slot-add", "缺对口位", "--relay"],
 ])
 def test_slot_add_invalid_candidate_leaves_config_untouched(tmp_path, configuration, arguments):
+    # 先证明确有这个子命令,不能把「命令不存在」当成候选校验拒绝。
+    help_result = run_cli(tmp_path, ["slot-add", "--help"], configuration=configuration)
+    assert help_result.returncode == 0, help_result.stderr.decode("utf-8")
+    assert "--relay" in help_result.stdout.decode("utf-8")
     before = configuration.read_bytes()
     result = run_cli(tmp_path, arguments, configuration=configuration)
     assert result.returncode != 0

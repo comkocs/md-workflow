@@ -6,7 +6,7 @@
 
   · 默认读 core/desk_config.json(随仓一起的通用默认);
   · 环境变量 TICKET_DESK_CONFIG 指向另一份**完整**的配置文件时,整份换成那一份(不是叠加);
-  · 读不出来、缺键、写歪一律**当场报错**,不悄悄退回默认值——配置写歪了却按默认位表跑起来,
+  · 只有缺「办公目录」时提示并补默认目录;读不出来、缺其他键、写歪一律**当场报错**——配置写歪了却按默认位表跑起来,
     是这一类工具最坏的失败形态。
 
 ★代码里任何一处要用到位名、特殊位、任务档名,都从这里取,不许再写字面量。
@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -61,6 +62,9 @@ def load_config(path: Path) -> dict[str, Any]:
         raise RuntimeError(f"读不懂工单台配置文件 {path}:{exc}") from exc
     if not isinstance(values, dict):
         raise RuntimeError(f"工单台配置文件 {path} 的顶层必须是一个 JSON 对象。")
+    if "办公目录" not in values:
+        values["办公目录"] = (CORE_ROOT.parent / "_office").as_posix()
+        print(f"办公目录缺省,使用默认值:{values['办公目录']}", file=sys.stderr)
     validate(values, path)
     return values
 
@@ -142,7 +146,7 @@ def validate(values: dict[str, Any], path: Path | str = "<配置>") -> None:
         fail("「启用扩展」必须是扩展目录名的列表(core/extensions/ 下的子目录名,字母数字下划线)。")
 
     # 办公目录:开窗指令第三行「在 <它> 下新开线程」的那个目录,只在配置这一处写。
-    # ★代码里不给默认值:缺键、空串都当场报错——默认值一写进代码,目录字符串就成了两处。
+    # 缺键由 load_config 补默认目录;显式空串仍拒绝,不掩盖写错的配置。
     office = values["办公目录"]
     if not isinstance(office, str) or not office.strip():
         fail("「办公目录」必须是非空字符串:各窗开窗的那个目录(开窗指令第三行「在 <它> 下新开线程」)。")

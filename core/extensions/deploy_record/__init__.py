@@ -84,7 +84,7 @@ def deploy_record(
     record["免独图原因"] = "上服记录免图;取证(独图/试玩)另开取证单——取不到图不挡上服。"
     self.store.save_ticket(record, "deploy-record", actor, f"上服记录 · {repo} {head}")
     # 部署头自动写进当前值面。以前这一格靠人手抄,抄漏全台面读到旧值。
-    key = "deploy_head_server" if repo == "server" else "deploy_head_engine"
+    key = "deploy_head_server" if repo == "server" else "deploy_head_secondary"
     try:
         self.state_set(key, head, REVIEW_SLOT)
     except TicketError as error:  # pragma: no cover - 值面写失败不该把上服记录也废掉
@@ -99,7 +99,7 @@ def add_cli_parsers(commands: argparse._SubParsersAction) -> None:
     parser.add_argument("--probes", default="", help="探针原样输出:服务 active / 端口在听 / 首页 302 …")
     parser.add_argument(
         "--repo", default="server", choices=list(DEPLOY_REPOS),
-        help="server 记主仓部署头(写值面 deploy_head_server);engine 记第二个仓(写 deploy_head_engine)",
+        help="server 记主仓部署头(写值面 deploy_head_server);engine 记第二个仓(写 deploy_head_secondary)",
     )
     parser.add_argument("--ticket", dest="batch_tickets", action="append", default=[], help="批内单号,可重复")
     parser.add_argument("--by", default=DEPLOY_ACTOR)

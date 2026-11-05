@@ -54,7 +54,7 @@
 - 哈希:`git -C <仓路径> rev-parse --short <支名>` → `<输出>`
 - 数字:`<命令>` → `<输出>`
 - 文件名:`ls <目录>` → `<输出>`
-- 篇幅:`python -c "import io;print(len(io.open(r'<本件路径>',encoding='utf-8').read()))"` → `<字符数>`(≤6,000)
+- 篇幅:有 `python` 用 `python`,没有用 `py -X utf8` 替换下列命令中的 `python`,其余参数不变:`python -c "import io;print(len(io.open(r'<本件路径>',encoding='utf-8').read()))"` → `<字符数>`(≤6,000)
 
 ---
 

@@ -73,7 +73,7 @@ class TicketStore:
         self.slots_path = self.root / "slots.json"
         self.staff_path = self.root / "staff.json"
         self.counter_path = self.root / "counter.json"
-        # 当前值面：判据图尺寸、两仓部署头、走跑速度、已改未并的公共工具。
+        # 当前值面：验收图规格、项目部署头、已改未并的公共工具。
         # 和工单库同一处存，不落到某张工单里，也不在仓里另开散文件——那两种都会被人转抄成过期值。
         self.state_path = self.root / "state.json"
         self.log_path = self.root / "log.jsonl"

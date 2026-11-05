@@ -1,11 +1,11 @@
 ---
 name: context-guard-hooks
-description: 当要安装或自查写文件后的防回潮提示、配合 /compact 的压缩后回灌,或压缩后没读到本位现状时使用。先核长期产品目录与办公目录,再合并两条事件配置、保留压缩摘要三项,用 JSON 手动试跑并核回灌来源。
+description: 当要安装或自查写后防回潮、配合 /compact 的压缩后回灌、Bash 危险命令拦时使用。先核长期产品目录与办公目录,再合并三条事件配置、保留压缩摘要三项,用 JSON 手动试跑并核回灌来源与拒绝结果。
 ---
 
 ## 这个 skill 是干什么的(人话)
 
-这个 skill 帮你装好并自查写后防回潮、压缩后回灌两道记忆钩子。前一道在写文件后提醒旧词、写死版本、体积超限或章程缺节;后一道把当前现状重新送回压缩后的窗口。两道都只提示、不拦截,不能代替核实事实或主动保存现状。
+这个 skill 帮你装好并自查三道钩子。写后防回潮提醒旧词、写死版本、体积超限或章程缺节;压缩后回灌把当前现状送回窗口;这两道只提示。第三道危险命令拦会在 Bash 执行四种危险命令前拒绝并给替代命令。钩子不能代替核实事实或主动保存现状。
 
 ## 分类
 
@@ -13,7 +13,7 @@ description: 当要安装或自查写文件后的防回潮提示、配合 /compa
 
 ## 用前填这几个名字
 
-- {{产品目录}}:长期保留的产品副本绝对路径,其中有 `core/desk_config.json` 与 `core/tools/hooks/` 两脚本;不指系统临时副本。
+- {{产品目录}}:长期保留的产品副本绝对路径,其中有 `core/desk_config.json` 与 `core/tools/hooks/` 三脚本及启动壳;不指系统临时副本。
 - {{办公目录}}:办公文件根目录,填入 `core/desk_config.json` 的「办公目录」键;绝对路径直接用,相对路径按产品目录解析。
 - {{项目根}}:当前窗口读取项目配置的根目录,安装目标是 `<项目根>/.claude/settings.json`,不是产品仓内的现成文件。
 - {{开窗目录}}:实际打开窗口的目录,写进该目录的 `CLAUDE.md`;项目根与办公目录分别填写各自路径。
@@ -22,7 +22,7 @@ description: 当要安装或自查写文件后的防回潮提示、配合 /compa
 
 ## 什么时候用
 
-- 首次启用两道钩子,或产品、办公目录迁移后要核路径。
+- 首次启用三道钩子,或产品、办公目录迁移后要核路径。
 - 写完文件没见提示,要区分「没有命中」与「配置或输入有问题」。
 - 准备手动压缩,或自动压缩后没恢复本位状态、当日口径与在跑子代理。
 
@@ -30,27 +30,33 @@ description: 当要安装或自查写文件后的防回潮提示、配合 /compa
 
 ### 1. 核安装前提
 
-确认两脚本存在: `core/tools/hooks/防回潮检查.py`、`core/tools/hooks/压缩后回灌.py`。填好办公目录后再安装;脚本用标准库,命令固定带 `python -X utf8 -I`,路径有空格也保留引号。
+确认 `core/tools/hooks/` 内有 `防回潮检查.py`、`压缩后回灌.py`、`危险命令拦.py` 与 `启动钩子.sh`。填好办公目录后再安装;脚本只用标准库。启动壳依赖 Bash(Git Bash 可用),有 python 用 `python -X utf8 -I`,没有则用 `py -X utf8 -I`;路径有空格也保留引号。
 
-这里只装两条事件钩子,不调整权限、默认模式或用户级配置。由有授权的人把下块的 `hooks` 合并进 `<项目根>/.claude/settings.json` 顶层;已有事件就追加对应条目,不要覆盖现有 `permissions` 或其他 hooks,也不要重复安装。窗口须能读到这份配置并信任所在目录,不信任时不能据「已写配置」判定生效。
+这里只装三条事件钩子,不调整权限、默认模式或用户级配置。由有授权的人把下块的 `hooks` 合并进 `<项目根>/.claude/settings.json` 顶层;已有事件就追加对应条目,不要覆盖现有 `permissions` 或其他 hooks,也不要重复安装。窗口须能读到这份配置并信任所在目录,不信任时不能据「已写配置」判定生效。
 
-### 2. 合并两条事件配置
+### 2. 合并三条事件配置
 
 将 `{{产品目录}}` 换成长留副本的路径,配置中路径统一用 `/`:
 
 ```json
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": "bash \"{{产品目录}}/core/tools/hooks/启动钩子.sh\" \"{{产品目录}}/core/tools/hooks/危险命令拦.py\"", "timeout": 5}]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
-        "hooks": [{"type": "command", "command": "python -X utf8 -I \"{{产品目录}}/core/tools/hooks/防回潮检查.py\"", "timeout": 5}]
+        "hooks": [{"type": "command", "command": "bash \"{{产品目录}}/core/tools/hooks/启动钩子.sh\" \"{{产品目录}}/core/tools/hooks/防回潮检查.py\"", "timeout": 5}]
       }
     ],
     "SessionStart": [
       {
         "matcher": "compact",
-        "hooks": [{"type": "command", "command": "python -X utf8 -I \"{{产品目录}}/core/tools/hooks/压缩后回灌.py\"", "timeout": 10}]
+        "hooks": [{"type": "command", "command": "bash \"{{产品目录}}/core/tools/hooks/启动钩子.sh\" \"{{产品目录}}/core/tools/hooks/压缩后回灌.py\"", "timeout": 10}]
       }
     ]
   }
@@ -59,6 +65,17 @@ description: 当要安装或自查写文件后的防回潮提示、配合 /compa
 
 - `PostToolUse`:写文件成功后的防回潮提示,matcher 保留 `Write|Edit|MultiEdit`,超时 5 秒。脚本只处理事件指向的现有 `.md`,不改文件;无命中时没有输出。
 - 压缩后回灌是配合 `/compact`(压缩命令)用的:手动 `/compact` 或自动压缩后由 SessionStart(compact)触发。配置就是 `SessionStart` 事件、`compact` matcher、超时 10 秒,不是每次写文件就回灌。
+
+`PreToolUse` 的 `Bash` 事件只拦 `rm -rf`、`git reset --hard`、以 `--force` / `-f` 强推到 main、`git worktree remove --force`。拒绝 JSON 的 `permissionDecision` 为 `deny`,`permissionDecisionReason` 是以「替代:」开头的一行可运行命令;其他命令与坏输入静默放行、退出码 0。它不执行输入命令,也不新增其他禁令。
+
+自查时仅把命令放入 JSON,不要真的运行危险命令:
+
+```bash
+echo '{"tool_name":"Bash","tool_input":{"command":"git worktree remove --force wt-不存在"}}' | bash "{{产品目录}}/core/tools/hooks/启动钩子.sh" "{{产品目录}}/core/tools/hooks/危险命令拦.py"
+echo '{"tool_name":"Bash","tool_input":{"command":"git status"}}' | bash "{{产品目录}}/core/tools/hooks/启动钩子.sh" "{{产品目录}}/core/tools/hooks/危险命令拦.py"
+```
+
+首条须输出 `deny` 与「替代:git worktree remove 'wt-不存在'」,第二条无输出;在获准测试窗口再核实际事件是否触发,不能只凭配置存在判定已拦。
 
 ### 3. 保留压缩摘要的三样内容
 
@@ -78,8 +95,8 @@ description: 当要安装或自查写文件后的防回潮提示、配合 /compa
 下面是 Git Bash 示例;替换所有占位符,JSON 内路径用 `/`。只读获准的文件与本窗会话记录,不要为凑命中破坏真源。先用已知有问题的练习 `.md` 核提示,再用修好的件核无提示:
 
 ```bash
-echo '{"tool_name":"Write","tool_input":{"file_path":"{{待查文件}}"},"cwd":"{{开窗目录}}"}' | python -X utf8 -I "{{产品目录}}/core/tools/hooks/防回潮检查.py"
-echo '{"source":"compact","cwd":"{{开窗目录}}","transcript_path":"{{本窗会话记录}}"}' | python -X utf8 -I "{{产品目录}}/core/tools/hooks/压缩后回灌.py"
+echo '{"tool_name":"Write","tool_input":{"file_path":"{{待查文件}}"},"cwd":"{{开窗目录}}"}' | bash "{{产品目录}}/core/tools/hooks/启动钩子.sh" "{{产品目录}}/core/tools/hooks/防回潮检查.py"
+echo '{"source":"compact","cwd":"{{开窗目录}}","transcript_path":"{{本窗会话记录}}"}' | bash "{{产品目录}}/core/tools/hooks/启动钩子.sh" "{{产品目录}}/core/tools/hooks/压缩后回灌.py"
 ```
 
 防回潮命中时输出 JSON,在 `hookSpecificOutput.additionalContext` 里显示「防回潮提示」与最多 10 条问题。逐条核对文件、行号与现行规则后再修,不凭提示批量替换。只装 `core/` 而没有附带产品词表、预算表时,作废词与体积预算两项会跳过,不能当成全项通过。

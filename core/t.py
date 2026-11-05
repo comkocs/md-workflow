@@ -5,6 +5,8 @@
     python core/t.py --demo <子命令> [参数]   演示台数据(core/demo-data/);--demo 只认放在第一个
     python core/t.py -h                       全部子命令
 
+有 python 用 python;没有时将命令开头的 python 换成 py -X utf8,其余参数不变。
+
 只做三件事,不加任何业务逻辑:
   ① 定数据目录(设 TICKET_DESK_ROOT,与 start.py 同一套规则);
   ② 输出统一 UTF-8 并逐行刷出(同 start.py);

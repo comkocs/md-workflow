@@ -4,7 +4,7 @@
 
 ## 启动
 
-在仓库根运行：
+在仓库根运行；有 `python` 用 `python`，没有时把 `python -X utf8` 换成 `py -X utf8`，其余参数（含隔离模式 `-I`）不变：
 
 ```bash
 python -X utf8 core/tools/dashboard/server.py

@@ -471,7 +471,7 @@ def parser() -> argparse.ArgumentParser:
     # 当前值面：全项目当天在变的那几个数，机器可读地放一处。
     # 故意不给 key 写 choices：argparse 的报错是「参数不对」，看不出合法键是哪几个；
     # 交给服务端拒，拒的时候把合法键原样列出来（R4 第 3 条钉的就是这一点）。
-    state = commands.add_parser("state", help="当前值面：判据图尺寸、两仓部署头、走跑速度、已改未并的公共工具")
+    state = commands.add_parser("state", help="当前值面：验收图规格、项目部署头、已改未并的公共工具")
     state_commands = state.add_subparsers(dest="state_command", required=True)
     state_commands.add_parser("get", help="打一份 JSON；各位读它，不要往自己的接管件里转抄")
     state_set = state_commands.add_parser("set", help=f"改一项；只有 {STATE_WRITERS[0]} 与 {STATE_WRITERS[1]} 能改")
@@ -874,7 +874,7 @@ def execute(args: argparse.Namespace, service: TicketService) -> tuple[Any, str]
                 # 提示走 stderr：stdout 必须是干净 JSON，不然 json.loads 会被这行字噎死。
                 print(
                     f"{STATE_UNSET_HINT}：" + "、".join(board["未填"])
-                    + f"。例：ticket.py state set judging_resolution 1280x720 --by {STATE_WRITERS[0]}",
+                    + f"。例：ticket.py state set evidence_resolution 1280x720 --by {STATE_WRITERS[0]}",
                     file=sys.stderr,
                 )
             return board, json.dumps(board, ensure_ascii=False, indent=2)

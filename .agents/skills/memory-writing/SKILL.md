@@ -25,7 +25,8 @@ description: 当要写一条记忆、把这次踩的坑或刚定的新规矩记�
 
 ## 步骤
 
-1. 读本目录 `references/memory-writing.md` 照做。
-2. 加完索引行发现快满或已被截,先照 `references/memory-writing.md` 第 13 步停手、再折节;装了 memory-index-folding(记忆索引折叠)就改用它折节。
+1. 写前对一遍转述四种走样:咨询写成定论、没选的选项写成禁令、方向句加硬数字、一次性提醒写成常设;命中就改回原话加指针。
+2. 读本目录 `references/memory-writing.md` 照做。
+3. 加完索引行发现快满或已被截,先照 `references/memory-writing.md` 第 13 步停手、再折节;装了 memory-index-folding(记忆索引折叠)就改用它折节。
 
 格式细则都在本目录:`references/memory-spec-sections-1-4.md`(记忆放在哪、单文件单事实与 frontmatter、正文三段与样例、索引 MEMORY.md)与 `references/memory-spec-section-6.md`(写入、更新、删除纪律)。`references/memory-writing.md` 只排顺序,和这两份对不上时以这两份为准。

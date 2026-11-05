@@ -74,7 +74,10 @@ rm -rf "$APP/tools/tickets" "$APP/tools/browser" "$APP/extensions"
 cp -a "$SOURCE/tools/tickets" "$APP/tools/tickets"
 cp -a "$SOURCE/tools/browser" "$APP/tools/browser"
 if [[ -d "$SOURCE/extensions" ]]; then cp -a "$SOURCE/extensions" "$APP/extensions"; fi
-if [[ -f "$SOURCE/desk_config.json" ]]; then cp -a "$SOURCE/desk_config.json" "$APP/desk_config.json"; fi
+# 已有项目配置由服务器维护,只在首次缺件时采用包内配置。
+if [[ ! -f "$APP/desk_config.json" && -f "$SOURCE/desk_config.json" ]]; then
+  cp -a "$SOURCE/desk_config.json" "$APP/desk_config.json"
+fi
 
 if [[ ! -f "$CERT" || ! -f "$KEY" ]]; then
   openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes -subj "/CN=$DOMAIN" -keyout "$KEY" -out "$CERT"
