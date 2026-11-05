@@ -1,8 +1,8 @@
 # md-workflow · Hive-style Subagents · Million-scale Code Engineering Skills
 
-**One-click download & run:** open an AI window (Claude Code or VS Code) in your project directory and paste this: `Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.`
+**One-click download & run:** open an AI window (Claude Code or VS Code) in your project directory and paste this: `Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation; for a new project, do only the requirements intake first and build the repository only after I confirm; stay within my authorization throughout and retain the human decision points I specify.`
 
-**一键下载运行：** 在项目目录开一个 AI 窗（Claude Code 或 VS Code）贴这一句：`执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。`
+**一键下载运行：** 在项目目录开一个 AI 窗（Claude Code 或 VS Code）贴这一句：`执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程；新项目先只做需求对接，我确认后再建仓；全程在我的授权范围内，并保留我指定的人工拍板点。`
 
 ## Overview
 
@@ -165,7 +165,7 @@ Read [the startup guide](desk/开局向导.md) and choose its initial branch: **
 Paste this instruction into an AI window opened in your project directory; the guide clones the project itself:
 
 ```text
-Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation, then carry out that branch within my authorization and retain the human decision points I specify.
+Execute all instructions in https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md: first choose the new-project, legacy-project handoff, or workflow-only branch that fits my situation; for a new project, do only the requirements intake first and build the repository only after I confirm; stay within my authorization throughout and retain the human decision points I specify.
 ```
 
 The full workflow combines pointer-based memory, ticketed work, independent verification, and the subtractive constitution. The product release is **v2.0**; the current constitution document is **v2.3**, with **14 gates**: 11 core and 3 optional. Automation stays within the user's authorization; selected human decisions can remain in the loop, and core gates are not optional switches. The tier names route work, not mandate a particular model: the main window handles the top tier, while difficult, routine, and lightweight work can be delegated.
@@ -345,7 +345,7 @@ python -X utf8 -I core/tools/dashboard/server.py
 在项目目录开一个 AI 窗贴这一句，向导会自己克隆项目：
 
 ```text
-执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程，再在我的授权范围内完成对应分支，并保留我指定的人工拍板点。
+执行 https://github.com/comkocs/md-workflow/blob/main/desk/开局向导.md 的全部指令，先按我的情况选择新项目、接管老项目或只装流程；新项目先只做需求对接，我确认后再建仓；全程在我的授权范围内，并保留我指定的人工拍板点。
 ```
 
 整套工作流把指针记忆、工单制、独立核验与减法宪法合在一起。产品版本是 **v2.0**；现行宪法文档为 **v2.3**，共 **14 闸**，其中核心 11、可选 3。全自动仍受用户授权约束，按需保留人工拍板，核心闸不能当可选开关关掉。档位用于分工，不绑定某个模型：顶级由主窗做，困难、日常、轻量可交子代理。
